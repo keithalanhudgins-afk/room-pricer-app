@@ -66,6 +66,10 @@
   .lnk{border-radius:9px;padding:9px 13px;font-size:14px;font-weight:600;text-decoration:none}
   .lnk-dark{background:var(--ink);color:var(--paper)}
   .lnk-light{background:var(--white);color:var(--ink);border:2px solid var(--manilaEdge)}
+  .tagwrap{margin-top:12px;max-width:340px}
+  .tagwrap label{font-size:12px;font-weight:700;color:var(--soft);text-transform:uppercase;letter-spacing:.06em}
+  .tagwrap input{display:block;width:100%;font-size:16px;padding:11px;border:2px solid var(--manilaEdge);border-radius:9px;margin-top:5px;background:var(--white)}
+  .tagwrap input:focus{outline:none;border-color:var(--blue)}
   .who2{font-size:12px;color:var(--soft);margin-top:5px}
   .pricebox{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px}
   .pcontrol{display:flex;align-items:center;gap:8px}
@@ -73,6 +77,7 @@
   .pminus{border:3px solid var(--blue);background:var(--white);color:var(--blue)}
   .pplus{border:none;background:var(--blue);color:var(--white)}
   .pinput{width:80px;font-size:26px;font-weight:800;padding:6px 4px;border-radius:10px;border:3px solid var(--blue);background:var(--white);text-align:center}
+  .dollar{font-size:26px;font-weight:800;color:var(--ink)}
   .removebtn{background:transparent;color:var(--soft);border:none;font-size:14px;text-decoration:underline;margin-top:4px}
   .status-pricing{font-size:16px;font-weight:700;color:var(--blue)}
   .status-err{font-size:15px;color:var(--rust);font-weight:700}
@@ -664,6 +669,12 @@ function renderItems(){
       var goog=document.createElement('a'); goog.className='lnk lnk-light'; goog.target='_blank'; goog.rel='noopener';
       goog.href='https://www.google.com/search?q='+q; goog.textContent='Google'; links.appendChild(goog);
       f.appendChild(links);
+      // editable tag name (what prints on the label)
+      var tagWrap=document.createElement('div'); tagWrap.className='tagwrap';
+      var tagLab=document.createElement('label'); tagLab.textContent='Label text (what prints on the tag)'; tagWrap.appendChild(tagLab);
+      var tagIn=document.createElement('input'); tagIn.type='text'; tagIn.maxLength=28; tagIn.value=(it.tag_name||it.title||'').slice(0,28);
+      tagIn.oninput=function(e){ it.tag_name=e.target.value; sb.from('items').update({tag_name:e.target.value}).eq('id',it.id); };
+      tagWrap.appendChild(tagIn); f.appendChild(tagWrap);
       var wt=document.createElement('div'); wt.className='who2'; wt.textContent='Photo by '+(it.taken_by===ME.userId?'you':'a teammate'); f.appendChild(wt);
     }
     card.appendChild(f);
@@ -671,10 +682,11 @@ function renderItems(){
       var pb=document.createElement('div'); pb.className='pricebox';
       var pc=document.createElement('div'); pc.className='pcontrol';
       var minus=document.createElement('button'); minus.className='pbtn pminus'; minus.textContent='−'; minus.onclick=function(){ changePrice(it,-1); };
+      var dollar=document.createElement('span'); dollar.className='dollar'; dollar.textContent='$';
       var pin=document.createElement('input'); pin.className='pinput'; pin.type='number'; pin.min='0'; pin.setAttribute('inputmode','numeric'); pin.value=(it.price==null?'':it.price);
       pin.onchange=function(e){ setPrice(it,Number(e.target.value)); };
       var plus=document.createElement('button'); plus.className='pbtn pplus'; plus.textContent='+'; plus.onclick=function(){ changePrice(it,1); };
-      pc.appendChild(minus); pc.appendChild(pin); pc.appendChild(plus); pb.appendChild(pc);
+      pc.appendChild(minus); pc.appendChild(dollar); pc.appendChild(pin); pc.appendChild(plus); pb.appendChild(pc);
 
       // quantity
       var qty=document.createElement('div'); qty.className='qty';
