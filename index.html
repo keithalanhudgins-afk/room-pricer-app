@@ -60,6 +60,12 @@
   .lot{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:800}
   .title{font-size:18px;font-weight:800;margin-top:4px}
   .cond{font-size:14px;color:var(--soft);margin-top:3px}
+  .reason{font-size:14px;color:#3A4761;margin-top:8px;line-height:1.5}
+  .range{font-size:13px;color:var(--soft);margin-top:6px;font-weight:600}
+  .links{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .lnk{border-radius:9px;padding:9px 13px;font-size:14px;font-weight:600;text-decoration:none}
+  .lnk-dark{background:var(--ink);color:var(--paper)}
+  .lnk-light{background:var(--white);color:var(--ink);border:2px solid var(--manilaEdge)}
   .who2{font-size:12px;color:var(--soft);margin-top:5px}
   .pricebox{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px}
   .pcontrol{display:flex;align-items:center;gap:8px}
@@ -648,6 +654,16 @@ function renderItems(){
     else {
       var t=document.createElement('div'); t.className='title'; t.textContent=it.title||'Item'; f.appendChild(t);
       if(it.condition_note){ var cn=document.createElement('div'); cn.className='cond'; cn.textContent=it.condition_note; f.appendChild(cn); }
+      if(it.reasoning){ var rs=document.createElement('div'); rs.className='reason'; rs.textContent=it.reasoning; f.appendChild(rs); }
+      if(it.price_low!=null && it.price_high!=null){ var rg=document.createElement('div'); rg.className='range'; rg.textContent='Range: $'+it.price_low+' – $'+it.price_high; f.appendChild(rg); }
+      // research links
+      var q=encodeURIComponent(it.title||it.tag_name||'');
+      var links=document.createElement('div'); links.className='links';
+      var ebay=document.createElement('a'); ebay.className='lnk lnk-dark'; ebay.target='_blank'; ebay.rel='noopener';
+      ebay.href='https://www.ebay.com/sch/i.html?_nkw='+q+'&_sacat=0&LH_Sold=1&LH_Complete=1'; ebay.textContent='eBay sold'; links.appendChild(ebay);
+      var goog=document.createElement('a'); goog.className='lnk lnk-light'; goog.target='_blank'; goog.rel='noopener';
+      goog.href='https://www.google.com/search?q='+q; goog.textContent='Google'; links.appendChild(goog);
+      f.appendChild(links);
       var wt=document.createElement('div'); wt.className='who2'; wt.textContent='Photo by '+(it.taken_by===ME.userId?'you':'a teammate'); f.appendChild(wt);
     }
     card.appendChild(f);
