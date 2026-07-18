@@ -27,6 +27,28 @@
   .eyebrow{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--rust);font-weight:600;margin-bottom:5px}
   header h1{margin:0;font-size:26px;line-height:1.1;font-weight:600}
   .signout{background:none;border:none;color:#9AA3AD;font-size:14px;font-weight:600;text-decoration:underline;padding:0}
+  .menubtn{background:none;border:none;color:#fff;font-size:26px;line-height:1;padding:4px 2px}
+  .scrim{position:fixed;inset:0;background:rgba(7,24,37,.45);z-index:40}
+  .menupanel{position:fixed;top:0;right:0;bottom:0;width:82%;max-width:320px;background:var(--white);z-index:41;overflow-y:auto;box-shadow:-4px 0 18px rgba(7,24,37,.18)}
+  .menuhead{background:var(--ink);color:#fff;padding:15px 18px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;letter-spacing:.5px}
+  .menuclose{background:none;border:none;color:#fff;font-size:26px;line-height:1;padding:0}
+  .menuwho{padding:15px 18px;border-bottom:1px solid #F0F2F5}
+  .menurole{font-size:11px;color:var(--soft);text-transform:uppercase;letter-spacing:.06em}
+  .menucompany{font-size:17px;font-weight:700;color:var(--ink);margin-top:3px}
+  .menuitem{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid #F6F8FA;padding:16px 18px;font-size:17px;font-weight:600;color:var(--ink)}
+  .menuitem:active{background:#F4F6F8}
+  .menuitem.danger{color:#C0402A}
+  .menusep{height:8px;background:#FAFBFC}
+  .crumbbar{display:flex;align-items:center;gap:9px;padding:11px 0;margin-bottom:6px}
+  .backbtn{background:none;border:none;color:var(--ink);font-size:17px;font-weight:700;padding:6px 10px 6px 0;display:flex;align-items:center;gap:6px}
+  .crumbtext{font-size:14px;color:var(--soft)}
+  .crumbnow{font-size:14px;color:var(--ink);font-weight:700}
+  .scrollarrows{position:fixed;right:12px;bottom:16px;z-index:30;display:flex;flex-direction:column;gap:8px}
+  .scrollarrows button{width:46px;height:46px;border:1px solid var(--manilaEdge);background:rgba(255,255,255,.94);color:var(--ink);font-size:16px;border-radius:2px;box-shadow:0 2px 8px rgba(7,24,37,.14)}
+  .scrollarrows button:active{background:var(--manila)}
+  .selbox{position:absolute;top:8px;left:8px;width:30px;height:30px;border:1.5px solid var(--ink);background:rgba(255,255,255,.95);border-radius:2px;color:var(--white);font-size:16px;font-weight:700;z-index:3;padding:0}
+  .selbox.on{background:var(--orange);border-color:var(--orange);color:#fff}
+  .item.selected{outline:2px solid var(--orange);outline-offset:-2px}
   main{max-width:820px;margin:0 auto;padding:18px 16px 90px}
   .card{background:var(--white);border:1px solid var(--manilaEdge);border-radius:2px;padding:18px;margin-bottom:14px}
   .step{font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--soft);margin-bottom:12px}
@@ -61,7 +83,7 @@
   .addbtn{background:var(--orange);color:var(--white);border:none;border-radius:2px;padding:18px 28px;font-size:20px;font-weight:600}
   .addbtn:disabled{background:var(--soft)}
   .pill{display:inline-block;background:var(--manila);color:var(--ink);font-size:13px;font-weight:600;padding:5px 11px;border-radius:2px;margin-right:6px}
-  .item{background:var(--manila);border:1px solid var(--manilaEdge);border-radius:2px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+  .item{position:relative;background:var(--manila);border:1px solid var(--manilaEdge);border-radius:2px;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
   .thumb{width:90px;height:90px;object-fit:cover;border-radius:2px;border:1px solid var(--manilaEdge)}
   .thumb.ph{display:flex;align-items:center;justify-content:center;background:var(--paper);color:var(--soft);font-size:13px;text-align:center;padding:6px}
   .fields{flex:1 1 220px;min-width:180px}
@@ -81,9 +103,10 @@
   .who2{font-size:12px;color:var(--soft);margin-top:5px}
   .pricebox{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px}
   .pcontrol{display:flex;align-items:center;gap:8px}
-  .pbtn{width:52px;height:52px;border-radius:2px;font-size:30px;font-weight:700;line-height:1}
-  .pminus{border:1.5px solid var(--blue);background:var(--white);color:var(--blue)}
-  .pplus{border:none;background:var(--blue);color:var(--white)}
+  .pbtn{width:46px;height:52px;border:none;background:none;border-radius:0;font-size:34px;font-weight:400;line-height:1;padding:0}
+  .pminus{color:var(--ink)}
+  .pplus{color:var(--ink)}
+  .pbtn:active{opacity:.45}
   .pinput{width:80px;font-size:26px;font-weight:600;padding:6px 4px;border-radius:2px;border:1.5px solid var(--blue);background:var(--white);text-align:center}
   .dollar{font-size:26px;font-weight:600;color:var(--ink)}
   .removebtn{background:transparent;color:var(--soft);border:none;font-size:14px;text-decoration:underline;margin-top:4px}
@@ -129,9 +152,31 @@
         <div class="tagline">SNAP. PRICE. PRINT.</div>
       </div>
     </div>
-    <button class="signout" id="signOutBtn" style="display:none">Sign out</button>
+    <button class="menubtn" id="menuBtn" style="display:none" aria-label="Menu">&#9776;</button>
   </div>
 </header>
+
+<!-- SLIDE-OUT MENU -->
+<div id="menuScrim" class="scrim" style="display:none"></div>
+<div id="menuPanel" class="menupanel" style="display:none">
+  <div class="menuhead">
+    <span>MENU</span>
+    <button class="menuclose" id="menuClose" aria-label="Close menu">&times;</button>
+  </div>
+  <div class="menuwho">
+    <div class="menurole" id="menuRole">Signed in</div>
+    <div class="menucompany" id="menuCompany">—</div>
+  </div>
+  <button class="menuitem" id="miAllSales">All sales</button>
+  <button class="menuitem" id="miAllRooms">All rooms (this sale)</button>
+  <button class="menuitem" id="miPeople">Manage people</button>
+  <button class="menuitem" id="miArchived">Archived sales</button>
+  <button class="menuitem" id="miExport">Export sale (CSV)</button>
+  <div class="menusep"></div>
+  <button class="menuitem" id="miPrintMode">Fast print: on</button>
+  <div class="menusep"></div>
+  <button class="menuitem danger" id="miSignOut">Sign out</button>
+</div>
 
 <main>
 
@@ -181,19 +226,27 @@
       <p style="font-size:17px;line-height:1.5">Your account is set up. Your company owner needs to approve you before you can start pricing. Once they do, sign out and back in and you'll be ready.</p>
     </div>
 
-    <!-- OWNER: People button -->
-    <div id="peopleBtnWrap" style="display:none;margin-bottom:14px">
-      <button class="btn btn-soft" id="openPeopleBtn" style="width:100%">Manage people</button>
-    </div>
-
     <!-- PEOPLE SCREEN -->
     <div class="card" id="peopleCard" style="display:none">
-      <div class="stack" style="margin-bottom:10px">
-        <div class="step" style="margin:0">People</div>
-        <button class="btn btn-soft" id="closePeopleBtn">← Back</button>
+      <div class="crumbbar">
+        <button class="backbtn" id="closePeopleBtn">&#8592; Back</button>
+        <span class="crumbnow">Manage people</span>
       </div>
       <div class="printnote" style="margin-bottom:12px">Your company join code is <strong id="joinCodeShow">freedom</strong>. Give it to crew so they can sign up. Approve them below.</div>
       <div id="peopleList"></div>
+    </div>
+
+    <!-- ALL ROOMS (read-only view across the whole sale) -->
+    <div class="card" id="allRoomsCard" style="display:none">
+      <div class="crumbbar">
+        <button class="backbtn" id="allRoomsBack">&#8592; Back</button>
+        <span class="crumbtext" id="allRoomsSaleName">Sale</span>
+        <span class="crumbtext">/</span>
+        <span class="crumbnow">All rooms</span>
+      </div>
+      <input class="txt" id="allRoomsSearch" placeholder="Search all items in this sale…" style="margin-bottom:10px">
+      <div class="printnote" style="margin-bottom:10px">Viewing every item in this sale. To add photos, open a specific room.</div>
+      <div id="allRoomsList"></div>
     </div>
 
     <!-- SALE PICKER -->
@@ -209,14 +262,11 @@
 
     <!-- INSIDE A SALE -->
     <div id="saleView" style="display:none">
-      <div class="card">
-        <div class="stack">
-          <div><div class="step" style="margin:0">Sale</div><div style="font-size:20px;font-weight:800" id="saleNameHead"></div></div>
-          <div class="row">
-            <button class="btn btn-ghost" id="exportSaleBtn">Export CSV</button>
-            <button class="btn btn-soft" id="backToSales">← All sales</button>
-          </div>
-        </div>
+      <div class="crumbbar">
+        <button class="backbtn" id="backToSales">&#8592; Back</button>
+        <span class="crumbtext">All sales</span>
+        <span class="crumbtext">/</span>
+        <span class="crumbnow" id="saleNameHead"></span>
       </div>
 
       <!-- ROOMS -->
@@ -240,11 +290,24 @@
       </div>
 
       <div id="printBar" style="display:none;margin-bottom:12px" class="row"></div>
+      <div id="roomTools" style="display:none;margin-bottom:10px">
+        <input class="txt" id="roomSearch" placeholder="Search this room…">
+        <label class="toggle-line" id="showUncheckedToggle" style="margin-top:8px">
+          <span class="switch" id="showUncheckedSwitch"><span class="knob"></span></span>
+          Show only unchecked
+        </label>
+      </div>
       <div id="itemsWrap"></div>
     </div>
 
   </div>
 </main>
+
+<!-- FLOATING SCROLL ARROWS -->
+<div id="scrollArrows" class="scrollarrows" style="display:none">
+  <button id="scrollTopBtn" aria-label="Jump to top">&#9650;</button>
+  <button id="scrollBottomBtn" aria-label="Jump to bottom">&#9660;</button>
+</div>
 
 <script>
 /* ============ Supabase ============ */
@@ -369,7 +432,78 @@ $('signinBtn').onclick=async function(){
   var r=await sb.auth.signInWithPassword({email:email,password:pass});
   if(r.error){msg($('siMsg'),r.error.message,'bad');$('signinBtn').disabled=false;return;}
 };
-$('signOutBtn').onclick=async function(){ await sb.auth.signOut(); location.reload(); };
+/* ============ PDF DELIVERY ============ */
+// Tries to go straight to the phone's print dialog (2 taps instead of 4).
+// If the browser won't cooperate, falls back to opening the PDF so you can
+// still share-and-print the old way. Never leaves you unable to print.
+var directPrintEnabled = (localStorage.getItem('rpp_direct_print') !== 'off');
+function deliverPdf(url){
+  if(!directPrintEnabled){ openPdfFallback(url); return; }
+  var done=false;
+  var frame=document.createElement('iframe');
+  frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
+  frame.style.width='1px'; frame.style.height='1px'; frame.style.opacity='0'; frame.style.border='0';
+  frame.src=url;
+  frame.onload=function(){
+    try{
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+      done=true;
+    }catch(e){ /* blocked — fallback below will fire */ }
+  };
+  document.body.appendChild(frame);
+  // Safety net: if the print dialog never appeared, open the PDF the old way.
+  setTimeout(function(){
+    if(!done){
+      try{ document.body.removeChild(frame); }catch(e){}
+      openPdfFallback(url);
+    }
+  }, 2500);
+}
+function openPdfFallback(url){
+  var win=window.open(url,'_blank');
+  if(!win){ var a=document.createElement('a'); a.href=url; a.download='labels.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+}
+
+/* ============ SCROLL ARROWS ============ */
+$('scrollTopBtn').onclick=function(){ window.scrollTo({top:0,behavior:'smooth'}); };
+$('scrollBottomBtn').onclick=function(){ window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}); };
+function updateScrollArrows(){
+  var inRoom = $('saleView').style.display!=='none' && items && items.length>2;
+  var inAllRooms = $('allRoomsCard') && $('allRoomsCard').style.display!=='none';
+  $('scrollArrows').style.display = (inRoom||inAllRooms) ? 'flex' : 'none';
+}
+
+/* ============ MENU ============ */
+function openMenu(){
+  $('menuRole').textContent = 'Signed in — ' + (ME.isOwner ? 'Owner' : 'Crew');
+  $('menuCompany').textContent = ME.companyName || 'My Company';
+  $('miPeople').style.display = ME.isOwner ? 'block' : 'none';
+  $('miArchived').style.display = ME.isOwner ? 'block' : 'none';
+  var inSale = $('saleView').style.display !== 'none';
+  $('miAllRooms').style.display = inSale ? 'block' : 'none';
+  $('miExport').style.display = inSale ? 'block' : 'none';
+  $('miPrintMode').textContent='Fast print: '+(directPrintEnabled?'on':'off');
+  $('menuScrim').style.display='block'; $('menuPanel').style.display='block';
+}
+function closeMenu(){ $('menuScrim').style.display='none'; $('menuPanel').style.display='none'; }
+$('menuBtn').onclick=openMenu;
+$('menuClose').onclick=closeMenu;
+$('menuScrim').onclick=closeMenu;
+$('miSignOut').onclick=async function(){ closeMenu(); await sb.auth.signOut(); location.reload(); };
+$('miAllSales').onclick=function(){ closeMenu(); goToSales(); };
+$('miPeople').onclick=function(){ closeMenu(); openPeople(); };
+$('miArchived').onclick=function(){ closeMenu(); showArchived=true; goToSales(); };
+$('miExport').onclick=function(){ closeMenu(); exportSale(); };
+$('miAllRooms').onclick=function(){ closeMenu(); openAllRooms(); };
+$('miPrintMode').onclick=function(){
+  directPrintEnabled=!directPrintEnabled;
+  localStorage.setItem('rpp_direct_print', directPrintEnabled?'on':'off');
+  $('miPrintMode').textContent='Fast print: '+(directPrintEnabled?'on':'off');
+  alert(directPrintEnabled
+    ? 'Fast print ON — goes straight to the print dialog when your phone allows it.'
+    : 'Fast print OFF — opens the PDF first, then use Share to print.');
+};
 
 /* ============ session boot ============ */
 async function loadMe(session){
@@ -381,29 +515,35 @@ async function loadMe(session){
   var cl=$('companyLabel'); if(cl) cl.textContent = ME.companyName;
   return true;
 }
-function showAuth(){ $('authView').style.display='block'; $('appView').style.display='none'; $('signOutBtn').style.display='none'; $('signinBtn').disabled=false; $('signupBtn').disabled=false; }
+function showAuth(){ $('authView').style.display='block'; $('appView').style.display='none'; $('menuBtn').style.display='none'; $('signinBtn').disabled=false; $('signupBtn').disabled=false; }
 async function showApp(session){
   var ok=await loadMe(session); if(!ok) return;
-  $('authView').style.display='none'; $('appView').style.display='block'; $('signOutBtn').style.display='inline';
+  $('authView').style.display='none'; $('appView').style.display='block'; $('menuBtn').style.display='block';
   if(ME.status==='pending'){
     // employee not yet approved — show a waiting message, no app
     $('salePickerCard').style.display='none';
     $('saleView').style.display='none';
     $('pendingCard').style.display='block';
-    $('peopleBtnWrap').style.display='none';
     return;
   }
   $('pendingCard').style.display='none';
   $('salePickerCard').style.display='block';
-  $('peopleBtnWrap').style.display = ME.isOwner ? 'block' : 'none';
   await loadSales();
 }
 sb.auth.onAuthStateChange(function(_e,session){ if(session&&session.user){ showApp(session); } else { showAuth(); } });
 sb.auth.getSession().then(function(res){ if(res.data.session){ showApp(res.data.session); } else { showAuth(); } });
 
 /* ============ PEOPLE (owner only) ============ */
-$('openPeopleBtn').onclick=function(){ $('salePickerCard').style.display='none'; $('peopleBtnWrap').style.display='none'; $('peopleCard').style.display='block'; loadPeople(); };
-$('closePeopleBtn').onclick=function(){ $('peopleCard').style.display='none'; $('salePickerCard').style.display='block'; $('peopleBtnWrap').style.display= ME.isOwner?'block':'none'; };
+function hideAllScreens(){
+  var sa=$('scrollArrows'); if(sa) sa.style.display='none';
+  $('salePickerCard').style.display='none';
+  $('saleView').style.display='none';
+  $('peopleCard').style.display='none';
+  var ar=$('allRoomsCard'); if(ar) ar.style.display='none';
+}
+function goToSales(){ hideAllScreens(); $('salePickerCard').style.display='block'; loadSales(); }
+function openPeople(){ hideAllScreens(); $('peopleCard').style.display='block'; loadPeople(); }
+$('closePeopleBtn').onclick=function(){ goToSales(); };
 
 async function loadPeople(){
   $('peopleList').innerHTML='<p class="hint">Loading…</p>';
@@ -449,6 +589,60 @@ async function toggleOwner(m){ await sb.from('members').update({is_owner:!m.is_o
 async function deletePerson(id,name){
   if(!confirm('Remove '+(name||'this person')+' from your company? They will lose access.')) return;
   await sb.from('members').delete().eq('id',id); loadPeople();
+}
+
+/* ============ ALL ROOMS (read-only, whole sale) ============ */
+var allRoomsItems=[];
+async function openAllRooms(){
+  if(!currentSale) return;
+  hideAllScreens();
+  $('allRoomsCard').style.display='block';
+  $('allRoomsSaleName').textContent=currentSale.name;
+  $('allRoomsSearch').value='';
+  $('allRoomsList').innerHTML='<p class="hint">Loading every item in this sale…</p>';
+  var r=await sb.from('items').select('*, rooms(name)').eq('sale_id',currentSale.id).order('created_at',{ascending:true});
+  if(r.error){ $('allRoomsList').innerHTML='<p class="msg bad">'+r.error.message+'</p>'; return; }
+  allRoomsItems=r.data||[];
+  renderAllRooms();
+  updateScrollArrows();
+}
+$('allRoomsBack').onclick=function(){
+  hideAllScreens(); $('saleView').style.display='block';
+};
+$('allRoomsSearch').oninput=function(){ renderAllRooms(); };
+
+function renderAllRooms(){
+  var q=($('allRoomsSearch').value||'').toLowerCase().trim();
+  var list=allRoomsItems.filter(function(it){
+    if(!q) return true;
+    var hay=((it.title||'')+' '+(it.tag_name||'')+' '+(it.category||'')+' '+((it.rooms&&it.rooms.name)||'')).toLowerCase();
+    return hay.indexOf(q)>-1;
+  });
+  var wrap=$('allRoomsList'); wrap.innerHTML='';
+  if(!list.length){ wrap.innerHTML='<p class="hint">'+(q?'No items match “'+q+'”.':'No items in this sale yet.')+'</p>'; return; }
+
+  var summary=document.createElement('div'); summary.className='printnote'; summary.style.marginBottom='10px';
+  var unchecked=list.filter(function(it){return !it.printed;}).length;
+  summary.textContent=list.length+' item'+(list.length===1?'':'s')+' · '+unchecked+' unchecked';
+  wrap.appendChild(summary);
+
+  list.forEach(function(it){
+    var row=document.createElement('div'); row.className='saleitem'; row.style.flexWrap='wrap'; row.style.gap='8px';
+    var left=document.createElement('div'); left.style.flex='1 1 160px';
+    var top=document.createElement('div'); top.className='lot';
+    top.textContent='Item '+(it.item_number||'…');
+    if(it.printed){ var c=document.createElement('span'); c.className='printedchk'; c.innerHTML=' &#10003;'; top.appendChild(c); }
+    left.appendChild(top);
+    var nm=document.createElement('div'); nm.className='nm'; nm.textContent=it.title||it.tag_name||'Item'; left.appendChild(nm);
+    var rm=document.createElement('div'); rm.className='hint'; rm.style.marginTop='2px';
+    rm.textContent=((it.rooms&&it.rooms.name)||'Room')+(it.needs_review?' · flagged':'');
+    left.appendChild(rm);
+    row.appendChild(left);
+    var pr=document.createElement('div'); pr.style.fontSize='19px'; pr.style.fontWeight='700';
+    pr.textContent = it.price==null ? '' : ('$'+it.price);
+    row.appendChild(pr);
+    wrap.appendChild(row);
+  });
 }
 
 /* ============ SALES ============ */
@@ -536,7 +730,6 @@ $('backToSales').onclick=function(){
   $('saleView').style.display='none'; $('salePickerCard').style.display='block';
   loadSales();
 };
-$('exportSaleBtn').onclick=exportSale;
 
 async function loadRooms(){
   var r=await sb.from('rooms').select('id,name,created_at').eq('sale_id',currentSale.id).order('created_at',{ascending:true});
@@ -567,6 +760,9 @@ $('addRoomBtn').onclick=async function(){
 async function selectRoom(rm){
   currentRoom=rm; renderRoomChips();
   $('addPhotosCard').style.display='block';
+  roomQuery=''; showUncheckedOnly=false;
+  var rs=$('roomSearch'); if(rs) rs.value='';
+  var sw=$('showUncheckedSwitch'); if(sw) sw.className='switch';
   $('currentRoomLabel').textContent='Price this room: '+rm.name;
   await loadItems();
 }
@@ -605,6 +801,24 @@ function renderPrintBar(){
     only.appendChild(makeRefresh()); bar.appendChild(only); return;
   }
 
+  // SELECT MODE: print only the tapped items
+  if(selectMode){
+    var selRow=document.createElement('div'); selRow.style.display='flex'; selRow.style.alignItems='center'; selRow.style.gap='10px'; selRow.style.flexWrap='wrap';
+    var n=selectedCount();
+    var selBtn=document.createElement('button'); selBtn.className='pbprint';
+    selBtn.textContent='Print selected ('+n+')';
+    selBtn.disabled=(n===0); if(n===0) selBtn.style.opacity='.5';
+    selBtn.onclick=printSelected;
+    selRow.appendChild(selBtn);
+    var cancel=document.createElement('button'); cancel.className='btn btn-soft'; cancel.textContent='Cancel';
+    cancel.onclick=exitSelectMode; selRow.appendChild(cancel);
+    bar.appendChild(selRow);
+    var sn=document.createElement('div'); sn.className='printnote';
+    sn.textContent='Tap the items you want, then print just those.';
+    bar.appendChild(sn);
+    return;
+  }
+
   var count=printSelection().length;
   var roomName=currentRoom?currentRoom.name:'room';
 
@@ -638,6 +852,11 @@ function renderPrintBar(){
   var note=document.createElement('div'); note.className='printnote';
   note.textContent='Prints '+(printScope==='mine'?'your':'everyone\u2019s')+' items in '+roomName+(printUncheckedOnly?', skipping ones already checked.':'.');
   bar.appendChild(note);
+
+  var pick=document.createElement('button'); pick.className='btn btn-soft'; pick.style.marginTop='10px';
+  pick.textContent='Select items to print…';
+  pick.onclick=enterSelectMode;
+  bar.appendChild(pick);
 }
 function makeRefresh(){
   var ref=document.createElement('button');
@@ -650,13 +869,63 @@ function makeRefresh(){
 function iconBtn(cls, title, svg){
   var b=document.createElement('button'); b.className='iconbtn '+cls; b.title=title; b.setAttribute('aria-label',title); b.innerHTML=svg; return b;
 }
+var selectMode=false; var selectedIds={};
+function toggleSelect(it){ if(selectedIds[it.id]) delete selectedIds[it.id]; else selectedIds[it.id]=true; renderItems(); }
+function selectedCount(){ return Object.keys(selectedIds).length; }
+function clearSelection(){ selectedIds={}; }
+function enterSelectMode(){ selectMode=true; clearSelection(); renderItems(); }
+function exitSelectMode(){ selectMode=false; clearSelection(); renderItems(); }
+function printSelected(){
+  var chosen=items.filter(function(it){ return selectedIds[it.id]; });
+  if(!chosen.length){ alert('Tap the items you want to print first.'); return; }
+  printLabels(chosen);
+  exitSelectMode();
+}
+
+var roomQuery=''; var showUncheckedOnly=false;
+function wireRoomTools(){
+  var s=$('roomSearch');
+  if(s && !s._wired){ s._wired=true; s.oninput=function(e){ roomQuery=e.target.value.trim(); renderItems(); }; }
+  var t=$('showUncheckedToggle');
+  if(t && !t._wired){ t._wired=true; t.onclick=function(){
+    showUncheckedOnly=!showUncheckedOnly;
+    $('showUncheckedSwitch').className='switch'+(showUncheckedOnly?' on':'');
+    renderItems();
+  }; }
+}
+function visibleItems(){
+  var list=items;
+  if(roomQuery){
+    var q=roomQuery.toLowerCase();
+    list=list.filter(function(it){
+      var hay=((it.title||'')+' '+(it.tag_name||'')+' '+(it.category||'')+' '+(it.item_number||'')).toLowerCase();
+      return hay.indexOf(q)>-1;
+    });
+  }
+  if(showUncheckedOnly) list=list.filter(function(it){ return !it.printed; });
+  return list;
+}
 function renderItems(){
   renderPrintBar();
   var wrap=$('itemsWrap'); wrap.innerHTML='';
+  $('roomTools').style.display = items.length ? 'block' : 'none';
+  wireRoomTools();
+  updateScrollArrows();
   if(!items.length){ wrap.innerHTML='<p class="hint" style="text-align:center">No items in this room yet. Add photos above.</p>'; return; }
-  items.forEach(function(it){
-    var card=document.createElement('div'); card.className='item'+(it.needs_review?' review':'');
+  var shown=visibleItems();
+  if(!shown.length){
+    wrap.innerHTML='<p class="hint" style="text-align:center">'+(roomQuery?'No items match “'+roomQuery+'”.':'Everything in this room is checked.')+'</p>';
+    return;
+  }
+  shown.forEach(function(it){
+    var card=document.createElement('div'); card.className='item'+(it.needs_review?' review':'')+(selectedIds[it.id]?' selected':'');
     if(it.needs_review){ var rb=document.createElement('div'); rb.className='reviewbanner'; rb.textContent='⚠ Flagged for review — not printing. Retake or unflag when fixed.'; card.appendChild(rb); }
+    if(selectMode && !it._pricing && !it._err){
+      var selBox=document.createElement('button'); selBox.className='selbox'+(selectedIds[it.id]?' on':'');
+      selBox.innerHTML=selectedIds[it.id]?'&#10003;':'';
+      selBox.onclick=function(){ toggleSelect(it); };
+      card.appendChild(selBox);
+    }
     if(it._url){ var im=document.createElement('img'); im.className='thumb'; im.src=it._url; card.appendChild(im); }
     else { var ph=document.createElement('div'); ph.className='thumb ph'; ph.textContent=it._pricing?'…':'No preview'; card.appendChild(ph); }
     var f=document.createElement('div'); f.className='fields';
@@ -699,7 +968,8 @@ function renderItems(){
       var minus=document.createElement('button'); minus.className='pbtn pminus'; minus.textContent='−'; minus.onclick=function(){ changePrice(it,-1); };
       var dollar=document.createElement('span'); dollar.className='dollar'; dollar.textContent='$';
       var pin=document.createElement('input'); pin.className='pinput'; pin.type='number'; pin.min='0'; pin.setAttribute('inputmode','numeric'); pin.value=(it.price==null?'':it.price);
-      pin.onchange=function(e){ setPrice(it,Number(e.target.value)); };
+      pin.onchange=function(e){ setPriceTyped(it,Number(e.target.value),e.target); };
+      pin.onblur=function(e){ setPriceTyped(it,Number(e.target.value),e.target); };
       var plus=document.createElement('button'); plus.className='pbtn pplus'; plus.textContent='+'; plus.onclick=function(){ changePrice(it,1); };
       pc.appendChild(minus); pc.appendChild(dollar); pc.appendChild(pin); pc.appendChild(plus); pb.appendChild(pc);
 
@@ -735,6 +1005,14 @@ function renderItems(){
 }
 function changePrice(it,d){ setPrice(it,Math.max(0,(Number(it.price)||0)+d)); }
 async function setPrice(it,val){ it.price=val; renderItems(); await sb.from('items').update({price:val}).eq('id',it.id); }
+// Typed price entry: save WITHOUT re-rendering, so the keyboard and cursor stay put.
+async function setPriceTyped(it,val,inputEl){
+  it.price=val;
+  updatePrintBarOnly();
+  var r=await sb.from('items').update({price:val}).eq('id',it.id);
+  if(r && r.error){ alert('Price did not save: '+r.error.message); }
+}
+function updatePrintBarOnly(){ try{ renderPrintBar(); }catch(e){} }
 function changeQty(it,d){ var q=Math.max(1,(Number(it.quantity)||1)+d); it.quantity=q; renderItems(); sb.from('items').update({quantity:q}).eq('id',it.id); }
 async function toggleReview(it){
   var now=!it.needs_review; it.needs_review=now; renderItems();
@@ -827,7 +1105,7 @@ async function handleFiles(fileList){
 var LABEL_SIZE = { wmm:62, hmm:29 };  // Brother DK-1209 (your roll)
 var LOGO_BW = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAABqAQAAAAC5IfbHAAAEVElEQVR42q2XsY7bRhCGv10qEgMIJpE0LoxIZapEZZqz5BeJ9QguUhiBfdqzDcRd7g1yeYsUQULDRuAuQuoAoQEDVhOAulyxp1CcFEuKPFEmeRdvIc0S/y5n559/ZqkEN8Yx7UPn/5LAeWf05hy+N61wcSOZLYSptIwCfZJM017QhtZca+SrvDSwI69t755bsx16djW/13FvOxLzQuJF+ylTAolFYk/SUbdT/gjhEL1q9yQlyAYiaSDytMMp5XTjg/cNHHVg3mAnwF2YzLrkyXIGfGnwl13QLw3gnzGw3XKw29AA8gygv4JvO6DPbwOoDdzv4skcgL8gHHdAO9GEM4ZJO/qps4cx+qIVvR3m9lvUcSs6nThbHcN904ZeFXxPDbejthxURYolU8kGH07FStgO0nyy/TShl7b4PSwm3gU8bvE7KbUbSbOSEYnLWbxoVjJXxGhHkgWN6LQSs3TQrGRNers8hPcIjkxTTFbjMWBdaziCSROb8sJp0R0uWYgdNfntVdE2EBl8KOa1DKvT/kWjkvV5eCVtjhuVrJP5lfn9ZiWfSPWUYqeSvp9NvALtEiRt5F7fyd8xfxUDeCtUA5lTt7cqJPZDS9+xiIjEbT3nCjtn8266vPQFth9l17hxXKN+Axe3roM+DTveCiwiGe+XelbeW3K0RWIIRCywkLj4XYhIgiciIKbwZOXBoYvVGbBku+f32RBAaugVEOW9wxRoMWGlo1RG6h6e5VN3m9nkfaom96zyQjnJ97a8J+8ENkDyP7hces0om7vp/I56gPev3gXGSwG8v8NZZJne++5qd/XdbP/m6x5Hs01+Yg3wmLVbta/2PpCoPb8vDhGze5tmUpqgHuyCCygNbFUPQB2IiXbubnvNgUkdurejcNYh3r7pwsw4cehg96R5mX8D5r/eNak2+jXwqJgPO+ytLFPZ5iyBZICS2uUgdGidMEODZ2qFQ0rSgBBNqaNDlXBMCMvKJj1TRK5WCjfuBVG/REuRDqEAKGVg635dxo5Nkb36wI7VEeHzJs/zMRrS4kx+nUtVi2DLnbufR69/M80Pi0oUHSKvokBdlpZDY+gSc5Znv4aYsFhZ+9qdAPOyg+oDxa8Skgi4Q38XHhHT/s1a9oaM7mjdRbyVEGXXind6g+7a9Sva7r6kRSRFXmaM7CJW1hM5ERZm8e7SSiLxIAt0LamOMrCR08ZCiDj702KWM9hYvU+8hE9Ke2KYkYyB35Zgf973e8HnL9YxfHaXY/AZmcAAfGyVVV/Uc+NdBP/k9sAlyB/IqQG5VY9JUmkpSxIwtwAeAjO9J6cTtQbeAjxBrVmbdehamfj+a81UrrIZGbhMHBXGAGM/z9J+Wj/lV1HZCx4yMkHsepKy6pea3/Ks6PeGrSkb4XO4mNzsFlatNxD8VNqYnkE9eA5ZDX3CqyLbn6Bf82bmQrpGfPlE16uTgdOK7bQ8n4Dfo6amdxX79511KSLy639/0JFgj6nunQAAAABJRU5ErkJggg==";
 
-function printLabels(rowsToPrint){
+async function printLabels(rowsToPrint){
   var printable = rowsToPrint.filter(function(it){ return it.title && !it.needs_review; });
   if(!printable.length){ alert('Nothing to print (items may be flagged for review or not priced yet).'); return; }
   if(!window.jspdf || !window.jspdf.jsPDF){ alert('Label engine still loading — wait a second and try again.'); return; }
@@ -886,13 +1164,19 @@ function printLabels(rowsToPrint){
   try{
     var blob=doc.output('blob');
     var url=URL.createObjectURL(blob);
-    var win=window.open(url,'_blank');
-    if(!win){ var a=document.createElement('a'); a.href=url; a.download='labels.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    deliverPdf(url);
     // mark everything we just sent as printed (checkmark)
     var ids=printable.map(function(it){ return it.id; });
     printable.forEach(function(it){ it.printed=true; });
     renderItems();
-    sb.from('items').update({printed:true}).in('id',ids);
+    var pr=await sb.from('items').update({printed:true}).in('id',ids).select('id');
+    if(pr.error){
+      printable.forEach(function(it){ it.printed=false; }); renderItems();
+      alert('Labels printed, but the checkmarks could not be saved:\n\n'+pr.error.message+'\n\nTell Claude this message.');
+    } else if(!pr.data || pr.data.length===0){
+      printable.forEach(function(it){ it.printed=false; }); renderItems();
+      alert('Labels printed, but no checkmarks were saved (the database accepted 0 rows). This is usually a permissions rule. Tell Claude you saw this.');
+    }
   }catch(e){ alert('Could not build the label PDF: '+((e&&e.message)||e)); }
 }
 
@@ -900,9 +1184,11 @@ function printLabels(rowsToPrint){
 function printMyLabels(){ printLabels(items.filter(function(it){ return it.taken_by===ME.userId; })); }
 function printAllLabels(){ printLabels(items.slice()); }
 function printUnprinted(){ printLabels(items.filter(function(it){ return !it.printed; })); }
-function togglePrinted(it){
+async function togglePrinted(it){
   var now=!it.printed; it.printed=now; renderItems();
-  sb.from('items').update({printed:now}).eq('id',it.id);
+  var r=await sb.from('items').update({printed:now}).eq('id',it.id).select('id');
+  if(r.error){ it.printed=!now; renderItems(); alert('Could not save that checkmark: '+r.error.message); }
+  else if(!r.data || r.data.length===0){ it.printed=!now; renderItems(); alert('That checkmark did not save (0 rows changed) — usually a permissions rule. Tell Claude you saw this.'); }
 }
 
 /* ============ EXPORT WHOLE SALE (all rooms, all people) ============ */
