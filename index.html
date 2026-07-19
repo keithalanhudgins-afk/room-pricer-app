@@ -487,7 +487,9 @@ $('suModeOwner').onclick=function(){ signupMode='owner'; $('suModeOwner').classL
   }
 })();
 
+var SIGNUP_IN_PROGRESS = false;
 $('signupBtn').onclick=async function(){
+  SIGNUP_IN_PROGRESS = true;
   var name=$('suName').value.trim(),email=$('suEmail').value.trim(),pass=$('suPass').value;
   if(!name||!email||!pass){msg($('suMsg'),'Fill in every field.','bad');return;}
   if(pass.length<6){msg($('suMsg'),'Password needs 6+ characters.','bad');return;}
@@ -508,7 +510,7 @@ $('signupBtn').onclick=async function(){
     }
 
     var su=await sb.auth.signUp({email:email,password:pass});
-    if(su.error){msg($('suMsg'),su.error.message,'bad');$('signupBtn').disabled=false;return;}
+    if(su.error){msg($('suMsg'),su.error.message,'bad');$('signupBtn').disabled=false;SIGNUP_IN_PROGRESS=false;return;}
     var session=su.data.session;
     if(!session){ var si=await sb.auth.signInWithPassword({email:email,password:pass});
       if(si.error){msg($('suMsg'),'Account made. Confirm your email, then Sign in.','good');$('signupBtn').disabled=false;return;} session=si.data.session; }
@@ -521,13 +523,19 @@ $('signupBtn').onclick=async function(){
       var comp=await sb.rpc('create_company_and_owner',{company_name:company,owner_name:name});
       if(comp.error){msg($('suMsg'),'Company failed: '+comp.error.message,'bad');$('signupBtn').disabled=false;return;}
       msg($('suMsg'),'✓ Trial started! Setting things up…','good');
+      SIGNUP_IN_PROGRESS = false;
+      var s2 = await sb.auth.getSession();
+      if(s2.data.session) await showApp(s2.data.session);
+      return;
     } else {
       // employee: pending membership, awaiting owner approval
       var mem2=await sb.from('members').insert({user_id:uid,company_id:targetCompanyId,display_name:name,status:'pending',is_owner:false,can_print_all:false});
       if(mem2.error){msg($('suMsg'),'Join failed: '+mem2.error.message,'bad');$('signupBtn').disabled=false;return;}
       msg($('suMsg'),'✓ Request sent! Ask your owner to approve you, then sign in.','good');
+      SIGNUP_IN_PROGRESS = false;
     }
   }catch(e){msg($('suMsg'),'Error: '+(e.message||e),'bad');$('signupBtn').disabled=false;}
+  finally{ SIGNUP_IN_PROGRESS = false; }
 };
 $('signinBtn').onclick=async function(){
   var email=$('siEmail').value.trim(),pass=$('siPass').value;
@@ -612,8 +620,21 @@ $('miPrintMode').onclick=function(){
 /* ============ session boot ============ */
 async function loadMe(session){
   ME.userId=session.user.id; ME.email=session.user.email;
-  var r=await sb.from('members').select('display_name,status,is_owner,can_print_all,company_id,companies(name,join_code,trial_ends_at,subscription_status)').eq('user_id',ME.userId).single();
-  if(r.error||!r.data){ alert('Signed in but no company membership found. Tell Claude.'); return false; }
+  // The members row can lag a moment right after signup, so retry before giving up.
+  var r=null;
+  for(var attempt=0; attempt<6; attempt++){
+    r = await sb.from('members')
+      .select('display_name,status,is_owner,can_print_all,company_id,companies(name,join_code,trial_ends_at,subscription_status)')
+      .eq('user_id',ME.userId).maybeSingle();
+    if(r.data) break;
+    await new Promise(function(res){ setTimeout(res, 400); });
+  }
+  if(!r || !r.data){
+    showAuth();
+    msg($('siMsg'),'We could not load your account. Please sign in again.','bad');
+    try{ await sb.auth.signOut(); }catch(e){}
+    return false;
+  }
   ME.companyId=r.data.company_id; ME.name=r.data.display_name; ME.isOwner=r.data.is_owner; ME.status=r.data.status; ME.canPrintAll=(r.data.is_owner || r.data.can_print_all);
   var C = r.data.companies || {};
   ME.companyName = C.name || 'My Company';
@@ -735,7 +756,10 @@ function fallbackCopy(txt){
   ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
   ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta);
 }
-sb.auth.onAuthStateChange(function(_e,session){ if(session&&session.user){ showApp(session); } else { showAuth(); } });
+sb.auth.onAuthStateChange(function(_e,session){
+  if(SIGNUP_IN_PROGRESS) return;   // signup drives its own hand-off
+  if(session&&session.user){ showApp(session); } else { showAuth(); }
+});
 sb.auth.getSession().then(function(res){ if(res.data.session){ showApp(res.data.session); } else { showAuth(); } });
 
 /* ============ PEOPLE (owner only) ============ */
