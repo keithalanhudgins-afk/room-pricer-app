@@ -185,6 +185,9 @@
   <div class="menusep"></div>
   <button class="menuitem" id="miPrintMode">Fast print: on</button>
   <div class="menusep"></div>
+  <button class="menuitem" id="miHelp">Help &amp; how-to</button>
+  <button class="menuitem" id="miSupport">Contact support</button>
+  <div class="menusep"></div>
   <button class="menuitem danger" id="miSignOut">Sign out</button>
 </div>
 
@@ -211,11 +214,11 @@
 
         <div id="suOwnerFields" style="display:none">
           <p class="hint" style="margin-top:0">Starting your own company makes you the owner.</p>
-          <label class="fl">Company name</label><input class="txt" id="suCompany" type="text" value="Freedom Estate Services">
+          <label class="fl">Company name</label><input class="txt" id="suCompany" type="text" placeholder="Your company name">
         </div>
         <div id="suJoinFields">
           <p class="hint" style="margin-top:0">Joining your employer? Enter the join code they gave you. You'll be able to work once they approve you.</p>
-          <label class="fl">Join code</label><input class="txt" id="suJoinCode" type="text" placeholder="e.g. freedom">
+          <label class="fl">Join code</label><input class="txt" id="suJoinCode" type="text" placeholder="e.g. K7RM2X" autocapitalize="characters">
         </div>
 
         <label class="fl">Your name</label><input class="txt" id="suName" type="text">
@@ -230,6 +233,68 @@
   <!-- ===== APP (logged in) ===== -->
   <div id="appView" style="display:none">
 
+    <!-- TRIAL ENDED -->
+    <div class="card" id="trialEndedCard" style="display:none">
+      <div class="step">Your free trial has ended</div>
+      <p style="font-size:17px;line-height:1.5">Your 14-day trial of Room Pricer Pro is over. Everything you created is safe and waiting — nothing has been deleted.</p>
+      <p style="font-size:17px;line-height:1.5">Room Pricer Pro is <strong>$59.99 per month</strong>. Email us and we'll get you switched on, usually the same day.</p>
+      <a class="btn btn-wide" id="trialContactBtn" href="mailto:contact@roompricerpro.com?subject=Room%20Pricer%20Pro%20subscription" style="display:block;text-align:center;text-decoration:none;margin-top:14px">Email contact@roompricerpro.com</a>
+      <p class="hint" id="trialCompanyLine" style="margin-top:12px"></p>
+    </div>
+
+    <!-- TRIAL ENDED (crew view) -->
+    <div class="card" id="trialEndedCrewCard" style="display:none">
+      <div class="step">Your free trial has ended</div>
+      <p style="font-size:17px;line-height:1.5">The trial for your company has ended, so pricing and printing are paused. Your work is safe — nothing has been deleted.</p>
+      <p style="font-size:17px;line-height:1.5">Ask your company owner to renew and you'll be straight back in.</p>
+    </div>
+
+    <!-- OWNER SETUP -->
+    <div class="card" id="setupCard" style="display:none">
+      <div id="setupStep1">
+        <div class="step">Welcome to Room Pricer Pro</div>
+        <p style="font-size:17px;line-height:1.5">Let's get you set up. This takes about a minute.</p>
+        <label class="fl">What's your company called?</label>
+        <input class="txt" id="setupCompanyName" type="text" placeholder="e.g. Hill Country Estate Sales">
+        <button class="btn btn-wide" id="setupNext1">Continue</button>
+        <div class="msg" id="setupMsg1"></div>
+      </div>
+
+      <div id="setupStep2" style="display:none">
+        <div class="step">Your join code</div>
+        <p style="font-size:17px;line-height:1.5">This is how your crew gets into your account. Send them the app link, tell them to choose <strong>Join a company</strong>, and give them this code. You approve each person before they can work.</p>
+        <div style="border:1px solid var(--manilaEdge);padding:16px;text-align:center;margin:14px 0">
+          <div style="font-size:13px;letter-spacing:.08em;color:#6b7a85;font-weight:700">YOUR JOIN CODE</div>
+          <div id="setupCodeShow" style="font-size:38px;font-weight:800;letter-spacing:.14em;margin-top:4px">—</div>
+        </div>
+        <button class="btn btn-wide" id="setupCopyCode">Copy code</button>
+        <p class="hint">You can find this again any time under Manage people in the menu.</p>
+        <button class="btn btn-wide" id="setupNext2" style="margin-top:10px">Continue</button>
+      </div>
+
+      <div id="setupStep3" style="display:none">
+        <div class="step">Your first sale</div>
+        <p style="font-size:17px;line-height:1.5">Name the sale you're working on and the first room you'll price. You can add more rooms any time.</p>
+        <label class="fl">Sale name</label>
+        <input class="txt" id="setupSaleName" type="text" value="My First Sale">
+        <label class="fl">First room</label>
+        <input class="txt" id="setupRoomName" type="text" value="Living Room">
+        <button class="btn btn-wide" id="setupFinish">Start pricing</button>
+        <div class="msg" id="setupMsg3"></div>
+        <button class="btn-soft" id="setupSkip" style="display:block;width:100%;margin-top:10px;border:none;color:#6b7a85;font-weight:600;padding:10px">Skip for now</button>
+      </div>
+    </div>
+
+    <!-- HELP -->
+    <div class="card" id="helpCard" style="display:none">
+      <div class="crumbbar">
+        <button class="backbtn" id="closeHelpBtn">&#8592; Back</button>
+        <span class="crumbnow">Help &amp; how-to</span>
+      </div>
+      <div id="helpAccordion"></div>
+      <div class="printnote" style="margin-top:14px">Still stuck? Email <strong>contact@roompricerpro.com</strong> and a real person will answer.</div>
+    </div>
+
     <!-- PENDING (employee awaiting approval) -->
     <div class="card" id="pendingCard" style="display:none">
       <div class="step">Waiting for approval</div>
@@ -242,7 +307,23 @@
         <button class="backbtn" id="closePeopleBtn">&#8592; Back</button>
         <span class="crumbnow">Manage people</span>
       </div>
-      <div class="printnote" style="margin-bottom:12px">Your company join code is <strong id="joinCodeShow">freedom</strong>. Give it to crew so they can sign up. Approve them below.</div>
+      <div id="codeBlockBig" style="display:none;border:1px solid var(--manilaEdge);padding:14px;margin-bottom:14px">
+        <div class="step" style="margin-top:0">Adding your crew</div>
+        <p style="font-size:15px;line-height:1.5;margin:6px 0 12px">Send your crew the app link. They choose <strong>Join a company</strong>, enter the code below, and create their account. They'll show up here for you to approve.</p>
+        <div style="font-size:13px;letter-spacing:.08em;color:#6b7a85;font-weight:700">YOUR JOIN CODE</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+          <span id="joinCodeShow" style="font-size:30px;font-weight:800;letter-spacing:.12em">—</span>
+          <button class="btn" id="copyCodeBtn" style="padding:10px 14px">Copy</button>
+          <button class="btn-soft" id="editCodeBtn" style="border:1px solid var(--manilaEdge);border-radius:2px;padding:10px 14px;font-weight:600;font-size:14px">Change</button>
+        </div>
+        <div class="msg" id="codeMsg"></div>
+      </div>
+      <div id="codeBlockSmall" style="display:none;margin-bottom:12px" class="printnote">
+        Join code: <strong id="joinCodeShowSmall">—</strong>
+        <button class="btn-soft" id="copyCodeBtn2" style="border:1px solid var(--manilaEdge);border-radius:2px;padding:6px 10px;font-weight:600;font-size:13px;margin-left:8px">Copy</button>
+        <button class="btn-soft" id="editCodeBtn2" style="border:1px solid var(--manilaEdge);border-radius:2px;padding:6px 10px;font-weight:600;font-size:13px;margin-left:4px">Change</button>
+        <div class="msg" id="codeMsg2"></div>
+      </div>
       <div id="peopleList"></div>
     </div>
 
@@ -395,7 +476,16 @@ $('tabSignup').onclick=function(){$('tabSignup').classList.add('active');$('tabS
 
 var signupMode = 'join'; // 'join' or 'owner'
 $('suModeJoin').onclick=function(){ signupMode='join'; $('suModeJoin').classList.add('on'); $('suModeOwner').classList.remove('on'); $('suJoinFields').style.display='block'; $('suOwnerFields').style.display='none'; $('signupBtn').textContent='Create account'; };
-$('suModeOwner').onclick=function(){ signupMode='owner'; $('suModeOwner').classList.add('on'); $('suModeJoin').classList.remove('on'); $('suOwnerFields').style.display='block'; $('suJoinFields').style.display='none'; $('signupBtn').textContent='Create my company & account'; };
+$('suModeOwner').onclick=function(){ signupMode='owner'; $('suModeOwner').classList.add('on'); $('suModeJoin').classList.remove('on'); $('suOwnerFields').style.display='block'; $('suJoinFields').style.display='none'; $('signupBtn').textContent='Start my free trial'; };
+
+/* Website "Start free trial" button links to ...?start=1 and lands here. */
+(function(){
+  var qs = new URLSearchParams(location.search);
+  if(qs.get('start')==='1' || qs.get('trial')==='1'){
+    $('tabSignup').click();
+    $('suModeOwner').click();
+  }
+})();
 
 $('signupBtn').onclick=async function(){
   var name=$('suName').value.trim(),email=$('suEmail').value.trim(),pass=$('suPass').value;
@@ -429,7 +519,7 @@ $('signupBtn').onclick=async function(){
       if(comp.error){msg($('suMsg'),'Company failed: '+comp.error.message,'bad');$('signupBtn').disabled=false;return;}
       var mem=await sb.from('members').insert({user_id:uid,company_id:comp.data.id,display_name:name,status:'active',is_owner:true,can_print_all:true});
       if(mem.error){msg($('suMsg'),'Membership failed: '+mem.error.message,'bad');$('signupBtn').disabled=false;return;}
-      msg($('suMsg'),'✓ Company created! You\'re signed in as owner.','good');
+      msg($('suMsg'),'✓ Trial started! Setting things up…','good');
     } else {
       // employee: pending membership, awaiting owner approval
       var mem2=await sb.from('members').insert({user_id:uid,company_id:targetCompanyId,display_name:name,status:'pending',is_owner:false,can_print_all:false});
@@ -521,10 +611,19 @@ $('miPrintMode').onclick=function(){
 /* ============ session boot ============ */
 async function loadMe(session){
   ME.userId=session.user.id; ME.email=session.user.email;
-  var r=await sb.from('members').select('display_name,status,is_owner,can_print_all,company_id,companies(name)').eq('user_id',ME.userId).single();
+  var r=await sb.from('members').select('display_name,status,is_owner,can_print_all,company_id,companies(name,join_code,trial_ends_at,subscription_status)').eq('user_id',ME.userId).single();
   if(r.error||!r.data){ alert('Signed in but no company membership found. Tell Claude.'); return false; }
   ME.companyId=r.data.company_id; ME.name=r.data.display_name; ME.isOwner=r.data.is_owner; ME.status=r.data.status; ME.canPrintAll=(r.data.is_owner || r.data.can_print_all);
-  ME.companyName = r.data.companies ? r.data.companies.name : 'My Company';
+  var C = r.data.companies || {};
+  ME.companyName = C.name || 'My Company';
+  ME.joinCode = C.join_code || '';
+  ME.trialEndsAt = C.trial_ends_at || null;
+  ME.subStatus = C.subscription_status || 'trialing';
+  ME.trialDaysLeft = null;
+  if(ME.trialEndsAt){
+    ME.trialDaysLeft = Math.ceil((new Date(ME.trialEndsAt) - new Date())/86400000);
+  }
+  ME.locked = (ME.subStatus !== 'active') && (ME.trialDaysLeft !== null) && (ME.trialDaysLeft <= 0);
   var cl=$('companyLabel'); if(cl) cl.textContent = ME.companyName;
   return true;
 }
@@ -540,8 +639,100 @@ async function showApp(session){
     return;
   }
   $('pendingCard').style.display='none';
+
+  // Trial gate — data untouched, just blocked
+  if(ME.locked){
+    hideAllScreens();
+    if(ME.isOwner){
+      $('trialCompanyLine').textContent = 'Company: '+ME.companyName;
+      $('trialEndedCard').style.display='block';
+    } else {
+      $('trialEndedCrewCard').style.display='block';
+    }
+    return;
+  }
+
+  // First-run setup for brand-new owners
+  if(ME.isOwner && !localStorage.getItem('rpp_setup_done_'+ME.companyId)){
+    var anySales = await sb.from('sales').select('id').eq('company_id',ME.companyId).limit(1);
+    if(!anySales.error && (!anySales.data || anySales.data.length===0)){
+      hideAllScreens();
+      startSetup();
+      return;
+    }
+    localStorage.setItem('rpp_setup_done_'+ME.companyId,'1');
+  }
+
   $('salePickerCard').style.display='block';
+  renderTrialBanner();
   await loadSales();
+}
+
+/* ============ TRIAL BANNER (menu only, not nagging) ============ */
+function renderTrialBanner(){
+  var el = $('menuRole'); if(!el) return;
+  if(ME.subStatus==='active'){ return; }
+  if(ME.trialDaysLeft!==null && ME.trialDaysLeft>0){
+    el.textContent = 'Trial — '+ME.trialDaysLeft+' day'+(ME.trialDaysLeft===1?'':'s')+' left';
+  }
+}
+
+/* ============ OWNER SETUP ============ */
+function startSetup(){
+  $('setupCard').style.display='block';
+  $('setupStep1').style.display='block';
+  $('setupStep2').style.display='none';
+  $('setupStep3').style.display='none';
+  $('setupCompanyName').value = (ME.companyName==='My Company') ? '' : ME.companyName;
+}
+$('setupNext1').onclick=async function(){
+  var nm=$('setupCompanyName').value.trim();
+  if(!nm){ msg($('setupMsg1'),'Enter your company name.','bad'); return; }
+  $('setupNext1').disabled=true;
+  var u=await sb.from('companies').update({name:nm}).eq('id',ME.companyId);
+  $('setupNext1').disabled=false;
+  if(u.error){ msg($('setupMsg1'),'Could not save: '+u.error.message,'bad'); return; }
+  ME.companyName=nm;
+  var cl=$('companyLabel'); if(cl) cl.textContent=nm;
+  $('setupCodeShow').textContent = ME.joinCode || '—';
+  $('setupStep1').style.display='none';
+  $('setupStep2').style.display='block';
+};
+$('setupCopyCode').onclick=function(){ copyText(ME.joinCode, $('setupCopyCode'), 'Copy code'); };
+$('setupNext2').onclick=function(){ $('setupStep2').style.display='none'; $('setupStep3').style.display='block'; };
+$('setupSkip').onclick=function(){
+  localStorage.setItem('rpp_setup_done_'+ME.companyId,'1');
+  $('setupCard').style.display='none';
+  $('salePickerCard').style.display='block';
+  renderTrialBanner(); loadSales();
+};
+$('setupFinish').onclick=async function(){
+  var sn=$('setupSaleName').value.trim(), rn=$('setupRoomName').value.trim();
+  if(!sn||!rn){ msg($('setupMsg3'),'Give both a name.','bad'); return; }
+  $('setupFinish').disabled=true; msg($('setupMsg3'),'<span class="spinner"></span>Setting up…','');
+  var sale=await sb.from('sales').insert({company_id:ME.companyId,name:sn}).select().single();
+  if(sale.error){ msg($('setupMsg3'),'Could not create sale: '+sale.error.message,'bad'); $('setupFinish').disabled=false; return; }
+  var room=await sb.from('rooms').insert({company_id:ME.companyId,sale_id:sale.data.id,name:rn}).select().single();
+  if(room.error){ msg($('setupMsg3'),'Could not create room: '+room.error.message,'bad'); $('setupFinish').disabled=false; return; }
+  localStorage.setItem('rpp_setup_done_'+ME.companyId,'1');
+  $('setupCard').style.display='none';
+  $('setupFinish').disabled=false;
+  renderTrialBanner();
+  goToSales();
+};
+
+/* ============ clipboard helper ============ */
+function copyText(txt, btn, restore){
+  if(!txt) return;
+  var done=function(){ if(btn){ btn.textContent='Copied!'; setTimeout(function(){ btn.textContent=restore; },1500); } };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fallbackCopy(txt); done(); });
+  } else { fallbackCopy(txt); done(); }
+}
+function fallbackCopy(txt){
+  var ta=document.createElement('textarea'); ta.value=txt;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta);
 }
 sb.auth.onAuthStateChange(function(_e,session){ if(session&&session.user){ showApp(session); } else { showAuth(); } });
 sb.auth.getSession().then(function(res){ if(res.data.session){ showApp(res.data.session); } else { showAuth(); } });
@@ -554,10 +745,60 @@ function hideAllScreens(){
   $('saleView').style.display='none';
   $('peopleCard').style.display='none';
   var ar=$('allRoomsCard'); if(ar) ar.style.display='none';
+  var hc=$('helpCard'); if(hc) hc.style.display='none';
+  var sc=$('setupCard'); if(sc) sc.style.display='none';
+  var te=$('trialEndedCard'); if(te) te.style.display='none';
+  var tc=$('trialEndedCrewCard'); if(tc) tc.style.display='none';
 }
 function goToSales(){ hideAllScreens(); $('salePickerCard').style.display='block'; loadSales(); }
 function openPeople(){ hideAllScreens(); $('peopleCard').style.display='block'; loadPeople(); }
 $('closePeopleBtn').onclick=function(){ goToSales(); };
+
+/* ============ HELP ============ */
+var HELP_TOPICS = [
+  { q:'How do I add my crew?',
+    a:'Send them the app link. They tap Sign up, choose "Join a company", and enter your join code — you\'ll find it under Manage people in the menu. Once they sign up, they appear in your Manage people list and you tap Approve. Until you approve them, they can\'t see or change anything.' },
+  { q:'Where do I find my join code?',
+    a:'Menu, then Manage people. It\'s at the top with a Copy button. You can change it to something easier to say over the phone using the Change button — just tell your crew if you do.' },
+  { q:'What does "Print all" mean?',
+    a:'By default each person prints only the labels for items they photographed. Turning on "Print all" for someone lets them print every label in a room, no matter who shot it. Owners always have it.' },
+  { q:'Why does my phone say "blocked from automatically printing"?',
+    a:'That\'s Safari asking permission because the app is sending a label straight to the printer. Tap Allow. If it keeps asking and annoys you, open the menu and switch Fast print off — you\'ll get an extra tap or two instead of the prompt. Adding the app to your home screen instead of running it in a browser tab often stops it too.' },
+  { q:'How do I change a price?',
+    a:'Tap the minus or plus either side of the price to move it a dollar at a time, or tap the price itself and type a new one. Your change saves on its own.' },
+  { q:'What is the flag for?',
+    a:'Flagging an item pulls it out of the printing list so you can come back to it. A retake icon appears once something is flagged, so you can shoot a better photo.' },
+  { q:'What does the green check mean?',
+    a:'It means that label has already been sent to print. Tap the check to clear it if you need to print that label again.' },
+  { q:'Can I get my items into a spreadsheet?',
+    a:'Yes. Menu, then Export sale (CSV). That gives you every item in the sale as a file you can open in Excel or Google Sheets.' },
+  { q:'What happens when my trial ends?',
+    a:'Nothing gets deleted. Your sales, rooms, photos and prices all stay exactly where they are. You just see a screen asking you to subscribe instead of the app, and everything comes straight back once you\'re set up. Room Pricer Pro is $59.99 a month — email contact@roompricerpro.com and we\'ll switch you on.' }
+];
+function openHelp(){
+  hideAllScreens();
+  $('helpCard').style.display='block';
+  var h='';
+  HELP_TOPICS.forEach(function(t,i){
+    h+='<div style="border-bottom:1px solid var(--manilaEdge)">'
+     + '<button class="btn-soft" id="hq_'+i+'" style="display:block;width:100%;text-align:left;border:none;padding:14px 0;font-weight:700;font-size:16px;line-height:1.35">'+t.q+'</button>'
+     + '<div id="ha_'+i+'" style="display:none;font-size:15px;line-height:1.55;padding:0 0 14px">'+t.a+'</div></div>';
+  });
+  $('helpAccordion').innerHTML=h;
+  HELP_TOPICS.forEach(function(t,i){
+    $('hq_'+i).onclick=function(){
+      var a=$('ha_'+i);
+      a.style.display = (a.style.display==='none') ? 'block' : 'none';
+    };
+  });
+}
+$('closeHelpBtn').onclick=function(){ goToSales(); };
+$('miHelp').onclick=function(){ closeMenu(); openHelp(); };
+$('miSupport').onclick=function(){
+  closeMenu();
+  var body='\n\n---\nCompany: '+(ME.companyName||'')+'\nSigned in as: '+(ME.email||'')+'\n';
+  location.href='mailto:contact@roompricerpro.com?subject='+encodeURIComponent('Room Pricer Pro support')+'&body='+encodeURIComponent(body);
+};
 
 async function loadPeople(){
   $('peopleList').innerHTML='<p class="hint">Loading…</p>';
@@ -565,6 +806,7 @@ async function loadPeople(){
   if(r.error){ $('peopleList').innerHTML='<p class="msg bad">'+r.error.message+'</p>'; return; }
   var pending=r.data.filter(function(m){return m.status==='pending';});
   var active=r.data.filter(function(m){return m.status!=='pending';});
+  renderCodeBlock(r.data.length > 1);
   var html='';
   if(pending.length){
     html+='<div class="step" style="color:#B9601A">Waiting for approval</div>';
@@ -581,6 +823,31 @@ async function loadPeople(){
     var ow=$('ow_'+m.id); if(ow) ow.onclick=function(){ toggleOwner(m); };
   });
 }
+/* Big instructions until they've actually added someone, then a quiet line. */
+function renderCodeBlock(hasCrew){
+  var code = ME.joinCode || '—';
+  $('joinCodeShow').textContent = code;
+  $('joinCodeShowSmall').textContent = code;
+  $('codeBlockBig').style.display   = hasCrew ? 'none'  : 'block';
+  $('codeBlockSmall').style.display = hasCrew ? 'block' : 'none';
+}
+$('copyCodeBtn').onclick =function(){ copyText(ME.joinCode,$('copyCodeBtn'),'Copy'); };
+$('copyCodeBtn2').onclick=function(){ copyText(ME.joinCode,$('copyCodeBtn2'),'Copy'); };
+function promptNewCode(msgEl){
+  if(!ME.isOwner){ msg(msgEl,'Only the owner can change the join code.','bad'); return; }
+  var v=prompt('New join code (letters and numbers, 4+ characters):', ME.joinCode);
+  if(v===null) return;
+  msg(msgEl,'<span class="spinner"></span>Saving…','');
+  sb.rpc('update_join_code',{new_code:v}).then(function(r){
+    if(r.error){ msg(msgEl, r.error.message.replace(/^.*?:\s*/,''), 'bad'); return; }
+    ME.joinCode = r.data;
+    msg(msgEl,'✓ Join code updated. Tell your crew the new code.','good');
+    loadPeople();
+  });
+}
+$('editCodeBtn').onclick =function(){ promptNewCode($('codeMsg')); };
+$('editCodeBtn2').onclick=function(){ promptNewCode($('codeMsg2')); };
+
 function personRow(m, isPending){
   var isMe = (m.user_id===ME.userId);
   var s='<div class="saleitem" style="flex-wrap:wrap;gap:8px">';
