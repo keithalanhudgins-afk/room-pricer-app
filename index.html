@@ -515,10 +515,11 @@ $('signupBtn').onclick=async function(){
     var uid=session.user.id;
 
     if(signupMode==='owner'){
-      var comp=await sb.from('companies').insert({name:company}).select().single();
+      // One database call creates the company AND the owner membership together.
+      // Doing it in two browser calls fails: RLS blocks reading the new company
+      // back before a members row exists, which rolls the whole insert back.
+      var comp=await sb.rpc('create_company_and_owner',{company_name:company,owner_name:name});
       if(comp.error){msg($('suMsg'),'Company failed: '+comp.error.message,'bad');$('signupBtn').disabled=false;return;}
-      var mem=await sb.from('members').insert({user_id:uid,company_id:comp.data.id,display_name:name,status:'active',is_owner:true,can_print_all:true});
-      if(mem.error){msg($('suMsg'),'Membership failed: '+mem.error.message,'bad');$('signupBtn').disabled=false;return;}
       msg($('suMsg'),'✓ Trial started! Setting things up…','good');
     } else {
       // employee: pending membership, awaiting owner approval
