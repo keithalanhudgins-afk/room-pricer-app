@@ -549,8 +549,13 @@ $('signinBtn').onclick=async function(){
 // If the browser won't cooperate, falls back to opening the PDF so you can
 // still share-and-print the old way. Never leaves you unable to print.
 var directPrintEnabled = (localStorage.getItem('rpp_direct_print') !== 'off');
+// iOS/iPadOS cannot print a PDF from a hidden iframe. Safari reports success
+// but prints its own HTML wrapper (page header, "Page 1 of 1", wrong scale).
+// So on iOS we always open the PDF directly, which renders correctly.
+var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function deliverPdf(url){
-  if(!directPrintEnabled){ openPdfFallback(url); return; }
+  if(IS_IOS || !directPrintEnabled){ openPdfFallback(url); return; }
   var done=false;
   var frame=document.createElement('iframe');
   frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
@@ -595,7 +600,9 @@ function openMenu(){
   var inSale = $('saleView').style.display !== 'none';
   $('miAllRooms').style.display = inSale ? 'block' : 'none';
   $('miExport').style.display = inSale ? 'block' : 'none';
-  $('miPrintMode').textContent='Fast print: '+(directPrintEnabled?'on':'off');
+  $('miPrintMode').textContent = IS_IOS ? 'Printing: opens PDF (iPhone)' : ('Fast print: '+(directPrintEnabled?'on':'off'));
+  $('miPrintMode').disabled = IS_IOS;
+  $('miPrintMode').style.opacity = IS_IOS ? '.5' : '1';
   $('menuScrim').style.display='block'; $('menuPanel').style.display='block';
 }
 function closeMenu(){ $('menuScrim').style.display='none'; $('menuPanel').style.display='none'; }
@@ -1382,6 +1389,11 @@ async function printLabels(rowsToPrint){
   var H = Math.min(LABEL_SIZE.wmm, LABEL_SIZE.hmm);
   var jsPDF = window.jspdf.jsPDF;
   var doc = new jsPDF({ orientation:(W>=H?'landscape':'portrait'), unit:'mm', format:[W,H] });
+  // Tell the PDF viewer to print at actual size. Without this, iOS Safari
+  // rescales the 62x29mm label onto a standard sheet, which is what produced
+  // the tiny sideways labels.
+  try{ doc.viewerPreferences({ PrintScaling:'None', NumCopies:1, Duplex:'Simplex' }); }catch(e){}
+  try{ doc.setProperties({ title:'Room Pricer labels' }); }catch(e){}
   var pageIndex=0;
 
   function addLabel(it){
