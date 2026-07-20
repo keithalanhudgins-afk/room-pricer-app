@@ -183,7 +183,6 @@
   <button class="menuitem" id="miArchived">Archived sales</button>
   <button class="menuitem" id="miExport">Export sale (CSV)</button>
   <div class="menusep"></div>
-  <button class="menuitem" id="miPrintMode">Fast print: on</button>
   <div class="menusep"></div>
   <button class="menuitem" id="miHelp">Help &amp; how-to</button>
   <button class="menuitem" id="miSupport">Contact support</button>
@@ -548,38 +547,16 @@ $('signinBtn').onclick=async function(){
 // Tries to go straight to the phone's print dialog (2 taps instead of 4).
 // If the browser won't cooperate, falls back to opening the PDF so you can
 // still share-and-print the old way. Never leaves you unable to print.
-var directPrintEnabled = (localStorage.getItem('rpp_direct_print') !== 'off');
-// iOS/iPadOS cannot print a PDF from a hidden iframe. Safari reports success
-// but prints its own HTML wrapper (page header, "Page 1 of 1", wrong scale).
-// So on iOS we always open the PDF directly, which renders correctly.
-var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+/* Open the label PDF. The user prints it from there.
+   (A previous "fast print" iframe path is gone — iOS Safari printed its own
+   page wrapper instead of the PDF, producing blank/tiny labels.) */
 function deliverPdf(url){
-  if(IS_IOS || !directPrintEnabled){ openPdfFallback(url); return; }
-  var done=false;
-  var frame=document.createElement('iframe');
-  frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
-  frame.style.width='1px'; frame.style.height='1px'; frame.style.opacity='0'; frame.style.border='0';
-  frame.src=url;
-  frame.onload=function(){
-    try{
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
-      done=true;
-    }catch(e){ /* blocked — fallback below will fire */ }
-  };
-  document.body.appendChild(frame);
-  // Safety net: if the print dialog never appeared, open the PDF the old way.
-  setTimeout(function(){
-    if(!done){
-      try{ document.body.removeChild(frame); }catch(e){}
-      openPdfFallback(url);
-    }
-  }, 2500);
-}
-function openPdfFallback(url){
   var win=window.open(url,'_blank');
-  if(!win){ var a=document.createElement('a'); a.href=url; a.download='labels.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+  if(!win){
+    var a=document.createElement('a');
+    a.href=url; a.download='labels.pdf';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
 }
 
 /* ============ SCROLL ARROWS ============ */
@@ -600,9 +577,6 @@ function openMenu(){
   var inSale = $('saleView').style.display !== 'none';
   $('miAllRooms').style.display = inSale ? 'block' : 'none';
   $('miExport').style.display = inSale ? 'block' : 'none';
-  $('miPrintMode').textContent = IS_IOS ? 'Printing: opens PDF (iPhone)' : ('Fast print: '+(directPrintEnabled?'on':'off'));
-  $('miPrintMode').disabled = IS_IOS;
-  $('miPrintMode').style.opacity = IS_IOS ? '.5' : '1';
   $('menuScrim').style.display='block'; $('menuPanel').style.display='block';
 }
 function closeMenu(){ $('menuScrim').style.display='none'; $('menuPanel').style.display='none'; }
@@ -615,15 +589,6 @@ $('miPeople').onclick=function(){ closeMenu(); openPeople(); };
 $('miArchived').onclick=function(){ closeMenu(); showArchived=true; goToSales(); };
 $('miExport').onclick=function(){ closeMenu(); exportSale(); };
 $('miAllRooms').onclick=function(){ closeMenu(); openAllRooms(); };
-$('miPrintMode').onclick=function(){
-  directPrintEnabled=!directPrintEnabled;
-  localStorage.setItem('rpp_direct_print', directPrintEnabled?'on':'off');
-  $('miPrintMode').textContent='Fast print: '+(directPrintEnabled?'on':'off');
-  alert(directPrintEnabled
-    ? 'Fast print ON — goes straight to the print dialog when your phone allows it.'
-    : 'Fast print OFF — opens the PDF first, then use Share to print.');
-};
-
 /* ============ session boot ============ */
 async function loadMe(session){
   ME.userId=session.user.id; ME.email=session.user.email;
@@ -1389,11 +1354,6 @@ async function printLabels(rowsToPrint){
   var H = Math.min(LABEL_SIZE.wmm, LABEL_SIZE.hmm);
   var jsPDF = window.jspdf.jsPDF;
   var doc = new jsPDF({ orientation:(W>=H?'landscape':'portrait'), unit:'mm', format:[W,H] });
-  // Tell the PDF viewer to print at actual size. Without this, iOS Safari
-  // rescales the 62x29mm label onto a standard sheet, which is what produced
-  // the tiny sideways labels.
-  try{ doc.viewerPreferences({ PrintScaling:'None', NumCopies:1, Duplex:'Simplex' }); }catch(e){}
-  try{ doc.setProperties({ title:'Room Pricer labels' }); }catch(e){}
   var pageIndex=0;
 
   function addLabel(it){
