@@ -200,9 +200,17 @@
         <div class="tab" id="tabSignup">Create account</div>
       </div>
       <div id="signinPanel">
-        <label class="fl">Email</label><input class="txt" id="siEmail" type="email" autocomplete="email">
-        <label class="fl">Password</label><input class="txt" id="siPass" type="password" autocomplete="current-password">
+        <label class="fl">Email</label><input class="txt" id="siEmail" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="email">
+        <label class="fl">Password</label><input class="txt" id="siPass" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="current-password">
+        <div id="newPassBlock" style="display:none;border:1px solid var(--manilaEdge);padding:14px;margin-bottom:14px">
+          <div class="step" style="margin-top:0">Choose a new password</div>
+          <label class="fl">New password (6+ characters)</label>
+          <input class="txt" id="newPass" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="new-password">
+          <button class="btn btn-wide" id="savePassBtn">Save new password</button>
+          <div class="msg" id="newPassMsg"></div>
+        </div>
         <button class="btn btn-wide" id="signinBtn">Sign in</button>
+        <button class="btn-soft" id="forgotBtn" style="display:block;width:100%;margin-top:10px;border:none;color:#6b7a85;font-weight:600;padding:10px;font-size:15px">Forgot your password?</button>
         <div class="msg" id="siMsg"></div>
       </div>
       <div id="signupPanel" style="display:none">
@@ -220,9 +228,9 @@
           <label class="fl">Join code</label><input class="txt" id="suJoinCode" type="text" placeholder="e.g. K7RM2X" autocapitalize="characters">
         </div>
 
-        <label class="fl">Your name</label><input class="txt" id="suName" type="text">
-        <label class="fl">Email</label><input class="txt" id="suEmail" type="email">
-        <label class="fl">Password (6+ characters)</label><input class="txt" id="suPass" type="password">
+        <label class="fl">Your name</label><input class="txt" id="suName" type="text" autocapitalize="words" autocomplete="name">
+        <label class="fl">Email</label><input class="txt" id="suEmail" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="email">
+        <label class="fl">Password (6+ characters)</label><input class="txt" id="suPass" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="new-password">
         <button class="btn btn-wide" id="signupBtn">Create account</button>
         <div class="msg" id="suMsg"></div>
       </div>
@@ -536,6 +544,17 @@ $('signupBtn').onclick=async function(){
   }catch(e){msg($('suMsg'),'Error: '+(e.message||e),'bad');$('signupBtn').disabled=false;}
   finally{ SIGNUP_IN_PROGRESS = false; }
 };
+$('forgotBtn').onclick=async function(){
+  var email=$('siEmail').value.trim();
+  if(!email){ msg($('siMsg'),'Enter your email address above, then tap this again.','bad'); return; }
+  $('forgotBtn').disabled=true;
+  msg($('siMsg'),'<span class="spinner"></span>Sending reset link…','');
+  var r=await sb.auth.resetPasswordForEmail(email,{ redirectTo: location.origin + location.pathname });
+  $('forgotBtn').disabled=false;
+  if(r.error){ msg($('siMsg'),r.error.message,'bad'); return; }
+  msg($('siMsg'),'✓ Check your email for a reset link. It may take a minute, and it might land in spam.','good');
+};
+
 $('signinBtn').onclick=async function(){
   var email=$('siEmail').value.trim(),pass=$('siPass').value;
   if(!email||!pass){msg($('siMsg'),'Enter email and password.','bad');return;}
@@ -728,7 +747,32 @@ function fallbackCopy(txt){
   ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
   ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta);
 }
+$('savePassBtn').onclick=async function(){
+  var p=$('newPass').value;
+  if(!p || p.length<6){ msg($('newPassMsg'),'Password must be at least 6 characters.','bad'); return; }
+  $('savePassBtn').disabled=true; msg($('newPassMsg'),'<span class="spinner"></span>Saving…','');
+  var r=await sb.auth.updateUser({password:p});
+  $('savePassBtn').disabled=false;
+  if(r.error){ msg($('newPassMsg'),r.error.message,'bad'); return; }
+  $('newPassBlock').style.display='none';
+  RECOVERY_MODE=false;
+  msg($('siMsg'),'✓ Password updated. Signing you in…','good');
+  var s2=await sb.auth.getSession();
+  if(s2.data.session) await showApp(s2.data.session);
+};
+
+var RECOVERY_MODE=false;
 sb.auth.onAuthStateChange(function(_e,session){
+  // Arriving from a password-reset email: ask for a new password
+  // instead of dropping straight into the app.
+  if(_e==='PASSWORD_RECOVERY'){
+    RECOVERY_MODE=true;
+    showAuth();
+    $('newPassBlock').style.display='block';
+    $('tabSignin').click();
+    return;
+  }
+  if(RECOVERY_MODE) return;
   if(SIGNUP_IN_PROGRESS) return;   // signup drives its own hand-off
   if(session&&session.user){ showApp(session); } else { showAuth(); }
 });
@@ -1310,31 +1354,39 @@ async function handleFiles(fileList){
     if(ins.error){ $('progress').textContent='Save error: '+ins.error.message; $('addPhotos').disabled=false; return; }
     var itemRow=ins.data; itemRow._pricing=true; items.push(itemRow); renderItems();
 
-    // upload photo to storage
+    // Upload the full photo AND ask the AI to price it at the same time —
+    // these don't depend on each other, so running them in parallel instead
+    // of one-after-another cuts the wait roughly in half.
     var path = ME.companyId+'/'+currentSale.id+'/'+itemRow.id+'.jpg';
-    try{
-      var blob=await fileToBlob(file,1200,0.8);
-      if(blob){ await sb.storage.from('item-photos').upload(path, blob, {contentType:'image/jpeg',upsert:true});
-        await sb.from('items').update({photo_path:path}).eq('id',itemRow.id);
-        itemRow.photo_path=path;
-        var u=await sb.storage.from('item-photos').createSignedUrl(path,3600); itemRow._url=u.data?u.data.signedUrl:null;
-        renderItems();
-      }
-    }catch(e){ /* photo optional; keep going */ }
 
-    // price it
-    try{
-      var b64=await fileToResizedBase64(file);
-      var result=await callPricingAPI(b64);
-      var price=roundEstatePrice(Number(result.suggested_price)||1);
-      var patch={ title:result.title||'Unidentified item', tag_name:(result.tag_name||result.title||'Item').slice(0,28),
-        category:result.category||'', condition_note:result.condition_note||'', price:price, ai_suggested:price,
-        price_low:Number(result.price_low)||price, price_high:Number(result.price_high)||price,
-        reasoning:result.reasoning||'', research_flag:!!result.research_flag };
-      await sb.from('items').update(patch).eq('id',itemRow.id);
-      for(var k in patch) itemRow[k]=patch[k];
-      itemRow._pricing=false; renderItems();
-    }catch(err){ itemRow._pricing=false; itemRow._err=(err&&err.message)||'Pricing failed.'; renderItems(); }
+    var uploadJob = (async function(){
+      try{
+        var blob=await fileToBlob(file,1200,0.8);
+        if(blob){ await sb.storage.from('item-photos').upload(path, blob, {contentType:'image/jpeg',upsert:true});
+          await sb.from('items').update({photo_path:path}).eq('id',itemRow.id);
+          itemRow.photo_path=path;
+          var u=await sb.storage.from('item-photos').createSignedUrl(path,3600); itemRow._url=u.data?u.data.signedUrl:null;
+          renderItems();
+        }
+      }catch(e){ /* photo optional; keep going */ }
+    })();
+
+    var pricingJob = (async function(){
+      try{
+        var b64=await fileToResizedBase64(file);
+        var result=await callPricingAPI(b64);
+        var price=roundEstatePrice(Number(result.suggested_price)||1);
+        var patch={ title:result.title||'Unidentified item', tag_name:(result.tag_name||result.title||'Item').slice(0,28),
+          category:result.category||'', condition_note:result.condition_note||'', price:price, ai_suggested:price,
+          price_low:Number(result.price_low)||price, price_high:Number(result.price_high)||price,
+          reasoning:result.reasoning||'', research_flag:!!result.research_flag };
+        await sb.from('items').update(patch).eq('id',itemRow.id);
+        for(var k in patch) itemRow[k]=patch[k];
+        itemRow._pricing=false; renderItems();
+      }catch(err){ itemRow._pricing=false; itemRow._err=(err&&err.message)||'Pricing failed.'; renderItems(); }
+    })();
+
+    await Promise.all([uploadJob, pricingJob]);
   }
   $('progress').style.display='none'; $('addPhotos').disabled=false; $('fileInput').value='';
 }
