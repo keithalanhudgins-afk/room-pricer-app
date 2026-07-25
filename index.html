@@ -1410,7 +1410,7 @@ async function handleFiles(fileList){
       taken_by:ME.userId, item_number:num, quantity:1, price:0
     }).select().single();
     if(ins.error){ $('progress').textContent='Save error: '+ins.error.message; $('addPhotos').disabled=false; return; }
-    var itemRow=ins.data; itemRow._pricing=true; items.push(itemRow); renderItems();
+    var itemRow=ins.data; itemRow._pricing=true; items.unshift(itemRow); renderItems();
 
     // Upload the full photo AND ask the AI to price it at the same time —
     // these don't depend on each other, so running them in parallel instead
