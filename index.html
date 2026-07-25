@@ -183,8 +183,8 @@
   <button class="menuitem" id="miArchived">Archived sales</button>
   <button class="menuitem" id="miExport">Export sale (CSV)</button>
   <div class="menusep"></div>
-  <button class="menuitem" id="miPrintMode">Fast print: on</button>
   <div class="menusep"></div>
+  <button class="menuitem" id="miLabelSettings">Label settings</button>
   <button class="menuitem" id="miHelp">Help &amp; how-to</button>
   <button class="menuitem" id="miSupport">Contact support</button>
   <div class="menusep"></div>
@@ -201,9 +201,17 @@
         <div class="tab" id="tabSignup">Create account</div>
       </div>
       <div id="signinPanel">
-        <label class="fl">Email</label><input class="txt" id="siEmail" type="email" autocomplete="email">
-        <label class="fl">Password</label><input class="txt" id="siPass" type="password" autocomplete="current-password">
+        <label class="fl">Email</label><input class="txt" id="siEmail" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="email">
+        <label class="fl">Password</label><input class="txt" id="siPass" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="current-password">
+        <div id="newPassBlock" style="display:none;border:1px solid var(--manilaEdge);padding:14px;margin-bottom:14px">
+          <div class="step" style="margin-top:0">Choose a new password</div>
+          <label class="fl">New password (6+ characters)</label>
+          <input class="txt" id="newPass" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="new-password">
+          <button class="btn btn-wide" id="savePassBtn">Save new password</button>
+          <div class="msg" id="newPassMsg"></div>
+        </div>
         <button class="btn btn-wide" id="signinBtn">Sign in</button>
+        <button class="btn-soft" id="forgotBtn" style="display:block;width:100%;margin-top:10px;border:none;color:#6b7a85;font-weight:600;padding:10px;font-size:15px">Forgot your password?</button>
         <div class="msg" id="siMsg"></div>
       </div>
       <div id="signupPanel" style="display:none">
@@ -221,9 +229,9 @@
           <label class="fl">Join code</label><input class="txt" id="suJoinCode" type="text" placeholder="e.g. K7RM2X" autocapitalize="characters">
         </div>
 
-        <label class="fl">Your name</label><input class="txt" id="suName" type="text">
-        <label class="fl">Email</label><input class="txt" id="suEmail" type="email">
-        <label class="fl">Password (6+ characters)</label><input class="txt" id="suPass" type="password">
+        <label class="fl">Your name</label><input class="txt" id="suName" type="text" autocapitalize="words" autocomplete="name">
+        <label class="fl">Email</label><input class="txt" id="suEmail" type="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="email">
+        <label class="fl">Password (6+ characters)</label><input class="txt" id="suPass" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="new-password">
         <button class="btn btn-wide" id="signupBtn">Create account</button>
         <div class="msg" id="suMsg"></div>
       </div>
@@ -283,6 +291,29 @@
         <div class="msg" id="setupMsg3"></div>
         <button class="btn-soft" id="setupSkip" style="display:block;width:100%;margin-top:10px;border:none;color:#6b7a85;font-weight:600;padding:10px">Skip for now</button>
       </div>
+    </div>
+
+    <!-- LABEL SETTINGS -->
+    <div class="card" id="labelSettingsCard" style="display:none">
+      <div class="crumbbar">
+        <button class="backbtn" id="closeLabelSettingsBtn">&#8592; Back</button>
+        <span class="crumbnow">Label settings</span>
+      </div>
+
+      <div class="step" style="margin-top:0">What prints at the top of your labels</div>
+      <p style="font-size:15px;line-height:1.5;margin:6px 0 0">This appears on every label your crew prints. Keep it short — long names print small.</p>
+      <label class="fl">Business name on labels</label>
+      <input class="txt" id="labelNameInput" type="text" maxlength="34" placeholder="Your business name">
+      <button class="btn btn-wide" id="saveLabelNameBtn">Save</button>
+      <div class="msg" id="labelNameMsg"></div>
+
+      <div class="step">Your label size</div>
+      <p style="font-size:15px;line-height:1.5;margin:6px 0 0">
+        Room Pricer Pro prints on <strong>62mm x 29mm</strong> labels — Brother
+        <strong>DK-1209</strong> (small address labels, 800 per roll). Order these when you
+        need more. The printer is a Brother <strong>QL-810W</strong> series.
+      </p>
+      <div class="printnote" style="margin-top:12px">Other roll sizes won't line up correctly, so stick with DK-1209.</div>
     </div>
 
     <!-- HELP -->
@@ -537,6 +568,17 @@ $('signupBtn').onclick=async function(){
   }catch(e){msg($('suMsg'),'Error: '+(e.message||e),'bad');$('signupBtn').disabled=false;}
   finally{ SIGNUP_IN_PROGRESS = false; }
 };
+$('forgotBtn').onclick=async function(){
+  var email=$('siEmail').value.trim();
+  if(!email){ msg($('siMsg'),'Enter your email address above, then tap this again.','bad'); return; }
+  $('forgotBtn').disabled=true;
+  msg($('siMsg'),'<span class="spinner"></span>Sending reset link…','');
+  var r=await sb.auth.resetPasswordForEmail(email,{ redirectTo: location.origin + location.pathname });
+  $('forgotBtn').disabled=false;
+  if(r.error){ msg($('siMsg'),r.error.message,'bad'); return; }
+  msg($('siMsg'),'✓ Check your email for a reset link. It may take a minute, and it might land in spam.','good');
+};
+
 $('signinBtn').onclick=async function(){
   var email=$('siEmail').value.trim(),pass=$('siPass').value;
   if(!email||!pass){msg($('siMsg'),'Enter email and password.','bad');return;}
@@ -548,33 +590,16 @@ $('signinBtn').onclick=async function(){
 // Tries to go straight to the phone's print dialog (2 taps instead of 4).
 // If the browser won't cooperate, falls back to opening the PDF so you can
 // still share-and-print the old way. Never leaves you unable to print.
-var directPrintEnabled = (localStorage.getItem('rpp_direct_print') !== 'off');
+/* Open the label PDF. The user prints it from there.
+   (A previous "fast print" iframe path is gone — iOS Safari printed its own
+   page wrapper instead of the PDF, producing blank/tiny labels.) */
 function deliverPdf(url){
-  if(!directPrintEnabled){ openPdfFallback(url); return; }
-  var done=false;
-  var frame=document.createElement('iframe');
-  frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
-  frame.style.width='1px'; frame.style.height='1px'; frame.style.opacity='0'; frame.style.border='0';
-  frame.src=url;
-  frame.onload=function(){
-    try{
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
-      done=true;
-    }catch(e){ /* blocked — fallback below will fire */ }
-  };
-  document.body.appendChild(frame);
-  // Safety net: if the print dialog never appeared, open the PDF the old way.
-  setTimeout(function(){
-    if(!done){
-      try{ document.body.removeChild(frame); }catch(e){}
-      openPdfFallback(url);
-    }
-  }, 2500);
-}
-function openPdfFallback(url){
   var win=window.open(url,'_blank');
-  if(!win){ var a=document.createElement('a'); a.href=url; a.download='labels.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+  if(!win){
+    var a=document.createElement('a');
+    a.href=url; a.download='labels.pdf';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
 }
 
 /* ============ SCROLL ARROWS ============ */
@@ -595,7 +620,6 @@ function openMenu(){
   var inSale = $('saleView').style.display !== 'none';
   $('miAllRooms').style.display = inSale ? 'block' : 'none';
   $('miExport').style.display = inSale ? 'block' : 'none';
-  $('miPrintMode').textContent='Fast print: '+(directPrintEnabled?'on':'off');
   $('menuScrim').style.display='block'; $('menuPanel').style.display='block';
 }
 function closeMenu(){ $('menuScrim').style.display='none'; $('menuPanel').style.display='none'; }
@@ -605,18 +629,9 @@ $('menuScrim').onclick=closeMenu;
 $('miSignOut').onclick=async function(){ closeMenu(); await sb.auth.signOut(); location.reload(); };
 $('miAllSales').onclick=function(){ closeMenu(); goToSales(); };
 $('miPeople').onclick=function(){ closeMenu(); openPeople(); };
-$('miArchived').onclick=function(){ closeMenu(); showArchived=true; goToSales(); };
+$('miArchived').onclick=function(){ closeMenu(); goToSales(); showArchived=true; loadSales(); };
 $('miExport').onclick=function(){ closeMenu(); exportSale(); };
 $('miAllRooms').onclick=function(){ closeMenu(); openAllRooms(); };
-$('miPrintMode').onclick=function(){
-  directPrintEnabled=!directPrintEnabled;
-  localStorage.setItem('rpp_direct_print', directPrintEnabled?'on':'off');
-  $('miPrintMode').textContent='Fast print: '+(directPrintEnabled?'on':'off');
-  alert(directPrintEnabled
-    ? 'Fast print ON — goes straight to the print dialog when your phone allows it.'
-    : 'Fast print OFF — opens the PDF first, then use Share to print.');
-};
-
 /* ============ session boot ============ */
 async function loadMe(session){
   ME.userId=session.user.id; ME.email=session.user.email;
@@ -624,7 +639,7 @@ async function loadMe(session){
   var r=null;
   for(var attempt=0; attempt<6; attempt++){
     r = await sb.from('members')
-      .select('display_name,status,is_owner,can_print_all,company_id,companies(name,join_code,trial_ends_at,subscription_status)')
+      .select('display_name,status,is_owner,can_print_all,company_id,companies(name,join_code,trial_ends_at,subscription_status,label_name)')
       .eq('user_id',ME.userId).maybeSingle();
     if(r.data) break;
     await new Promise(function(res){ setTimeout(res, 400); });
@@ -639,6 +654,7 @@ async function loadMe(session){
   var C = r.data.companies || {};
   ME.companyName = C.name || 'My Company';
   ME.joinCode = C.join_code || '';
+  ME.labelName = C.label_name || C.name || '';
   ME.trialEndsAt = C.trial_ends_at || null;
   ME.subStatus = C.subscription_status || 'trialing';
   ME.trialDaysLeft = null;
@@ -756,7 +772,32 @@ function fallbackCopy(txt){
   ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
   ta.select(); try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta);
 }
+$('savePassBtn').onclick=async function(){
+  var p=$('newPass').value;
+  if(!p || p.length<6){ msg($('newPassMsg'),'Password must be at least 6 characters.','bad'); return; }
+  $('savePassBtn').disabled=true; msg($('newPassMsg'),'<span class="spinner"></span>Saving…','');
+  var r=await sb.auth.updateUser({password:p});
+  $('savePassBtn').disabled=false;
+  if(r.error){ msg($('newPassMsg'),r.error.message,'bad'); return; }
+  $('newPassBlock').style.display='none';
+  RECOVERY_MODE=false;
+  msg($('siMsg'),'✓ Password updated. Signing you in…','good');
+  var s2=await sb.auth.getSession();
+  if(s2.data.session) await showApp(s2.data.session);
+};
+
+var RECOVERY_MODE=false;
 sb.auth.onAuthStateChange(function(_e,session){
+  // Arriving from a password-reset email: ask for a new password
+  // instead of dropping straight into the app.
+  if(_e==='PASSWORD_RECOVERY'){
+    RECOVERY_MODE=true;
+    showAuth();
+    $('newPassBlock').style.display='block';
+    $('tabSignin').click();
+    return;
+  }
+  if(RECOVERY_MODE) return;
   if(SIGNUP_IN_PROGRESS) return;   // signup drives its own hand-off
   if(session&&session.user){ showApp(session); } else { showAuth(); }
 });
@@ -771,11 +812,12 @@ function hideAllScreens(){
   $('peopleCard').style.display='none';
   var ar=$('allRoomsCard'); if(ar) ar.style.display='none';
   var hc=$('helpCard'); if(hc) hc.style.display='none';
+  var ls=$('labelSettingsCard'); if(ls) ls.style.display='none';
   var sc=$('setupCard'); if(sc) sc.style.display='none';
   var te=$('trialEndedCard'); if(te) te.style.display='none';
   var tc=$('trialEndedCrewCard'); if(tc) tc.style.display='none';
 }
-function goToSales(){ hideAllScreens(); $('salePickerCard').style.display='block'; loadSales(); }
+function goToSales(){ showArchived=false; hideAllScreens(); $('salePickerCard').style.display='block'; loadSales(); }
 function openPeople(){ hideAllScreens(); $('peopleCard').style.display='block'; loadPeople(); }
 $('closePeopleBtn').onclick=function(){ goToSales(); };
 
@@ -789,6 +831,15 @@ var HELP_TOPICS = [
     a:'By default each person prints only the labels for items they photographed. Turning on "Print all" for someone lets them print every label in a room, no matter who shot it. Owners always have it.' },
   { q:'Why does my phone say "blocked from automatically printing"?',
     a:'That\'s Safari asking permission because the app is sending a label straight to the printer. Tap Allow. If it keeps asking and annoys you, open the menu and switch Fast print off — you\'ll get an extra tap or two instead of the prompt. Adding the app to your home screen instead of running it in a browser tab often stops it too.' },
+  { q:'How do I set up my Brother printer on Wi-Fi?',
+    a:'Plug the printer in and turn it on. On the printer, hold the <strong>WPS</strong> button for about a second — the Wi-Fi light starts blinking. If your router has a physical WPS button, press it within two minutes; the printer\u2019s Wi-Fi light goes solid when it connects. If that does not work, install Brother\u2019s free <strong>iPrint&amp;Label</strong> app, let it find the printer, and use its setup wizard to join your network. Your phone and the printer must be on the SAME Wi-Fi network — if you have separate 2.4GHz and 5GHz networks, put both on the 2.4GHz one. Once connected, the printer shows up automatically when you print from Room Pricer Pro.' },
+
+  { q:'What labels do I buy?',
+    a:'Brother <strong>DK-1209</strong> — 62mm x 29mm small address labels, 800 per roll. Other sizes will not line up. You can see this any time under Label settings in the menu.' },
+
+  { q:'How do I put my own business name on the labels?',
+    a:'Menu, then Label settings. Type your business name and save. It prints at the top of every label from then on. Only the owner can change it.' },
+
   { q:'How do I change a price?',
     a:'Tap the minus or plus either side of the price to move it a dollar at a time, or tap the price itself and type a new one. Your change saves on its own.' },
   { q:'What is the flag for?',
@@ -818,6 +869,29 @@ function openHelp(){
   });
 }
 $('closeHelpBtn').onclick=function(){ goToSales(); };
+$('miLabelSettings').onclick=function(){ closeMenu(); openLabelSettings(); };
+function openLabelSettings(){
+  hideAllScreens();
+  $('labelSettingsCard').style.display='block';
+  $('labelNameInput').value = ME.labelName || ME.companyName || '';
+  $('labelNameInput').disabled = !ME.isOwner;
+  $('saveLabelNameBtn').style.display = ME.isOwner ? 'block' : 'none';
+  if(!ME.isOwner) msg($('labelNameMsg'),'Only the owner can change this.','');
+  else msg($('labelNameMsg'),'','');
+}
+$('closeLabelSettingsBtn').onclick=function(){ goToSales(); };
+$('saveLabelNameBtn').onclick=async function(){
+  var v=$('labelNameInput').value.trim();
+  if(!v){ msg($('labelNameMsg'),'Enter a name for your labels.','bad'); return; }
+  $('saveLabelNameBtn').disabled=true;
+  msg($('labelNameMsg'),'<span class="spinner"></span>Saving…','');
+  var r=await sb.from('companies').update({label_name:v}).eq('id',ME.companyId);
+  $('saveLabelNameBtn').disabled=false;
+  if(r.error){ msg($('labelNameMsg'),'Could not save: '+r.error.message,'bad'); return; }
+  ME.labelName=v;
+  msg($('labelNameMsg'),'✓ Saved. New labels will use this.','good');
+};
+
 $('miHelp').onclick=function(){ closeMenu(); openHelp(); };
 $('miSupport').onclick=function(){
   closeMenu();
@@ -906,7 +980,7 @@ async function openAllRooms(){
   $('allRoomsSaleName').textContent=currentSale.name;
   $('allRoomsSearch').value='';
   $('allRoomsList').innerHTML='<p class="hint">Loading every item in this sale…</p>';
-  var r=await sb.from('items').select('*, rooms(name)').eq('sale_id',currentSale.id).order('created_at',{ascending:true});
+  var r=await sb.from('items').select('*, rooms(name)').eq('sale_id',currentSale.id).order('created_at',{ascending:false});
   if(r.error){ $('allRoomsList').innerHTML='<p class="msg bad">'+r.error.message+'</p>'; return; }
   allRoomsItems=r.data||[];
   renderAllRooms();
@@ -1090,7 +1164,7 @@ async function selectRoom(rm){
 /* ============ ITEMS ============ */
 async function loadItems(){
   $('itemsWrap').innerHTML='<p class="hint">Loading items…</p>';
-  var r=await sb.from('items').select('*').eq('room_id',currentRoom.id).order('created_at',{ascending:true});
+  var r=await sb.from('items').select('*').eq('room_id',currentRoom.id).order('created_at',{ascending:false});
   items = r.error ? [] : r.data;
   // fetch signed thumbnail URLs for photos
   await attachPhotoUrls();
@@ -1338,38 +1412,45 @@ async function handleFiles(fileList){
     if(ins.error){ $('progress').textContent='Save error: '+ins.error.message; $('addPhotos').disabled=false; return; }
     var itemRow=ins.data; itemRow._pricing=true; items.push(itemRow); renderItems();
 
-    // upload photo to storage
+    // Upload the full photo AND ask the AI to price it at the same time —
+    // these don't depend on each other, so running them in parallel instead
+    // of one-after-another cuts the wait roughly in half.
     var path = ME.companyId+'/'+currentSale.id+'/'+itemRow.id+'.jpg';
-    try{
-      var blob=await fileToBlob(file,1200,0.8);
-      if(blob){ await sb.storage.from('item-photos').upload(path, blob, {contentType:'image/jpeg',upsert:true});
-        await sb.from('items').update({photo_path:path}).eq('id',itemRow.id);
-        itemRow.photo_path=path;
-        var u=await sb.storage.from('item-photos').createSignedUrl(path,3600); itemRow._url=u.data?u.data.signedUrl:null;
-        renderItems();
-      }
-    }catch(e){ /* photo optional; keep going */ }
 
-    // price it
-    try{
-      var b64=await fileToResizedBase64(file);
-      var result=await callPricingAPI(b64);
-      var price=roundEstatePrice(Number(result.suggested_price)||1);
-      var patch={ title:result.title||'Unidentified item', tag_name:(result.tag_name||result.title||'Item').slice(0,28),
-        category:result.category||'', condition_note:result.condition_note||'', price:price, ai_suggested:price,
-        price_low:Number(result.price_low)||price, price_high:Number(result.price_high)||price,
-        reasoning:result.reasoning||'', research_flag:!!result.research_flag };
-      await sb.from('items').update(patch).eq('id',itemRow.id);
-      for(var k in patch) itemRow[k]=patch[k];
-      itemRow._pricing=false; renderItems();
-    }catch(err){ itemRow._pricing=false; itemRow._err=(err&&err.message)||'Pricing failed.'; renderItems(); }
+    var uploadJob = (async function(){
+      try{
+        var blob=await fileToBlob(file,1200,0.8);
+        if(blob){ await sb.storage.from('item-photos').upload(path, blob, {contentType:'image/jpeg',upsert:true});
+          await sb.from('items').update({photo_path:path}).eq('id',itemRow.id);
+          itemRow.photo_path=path;
+          var u=await sb.storage.from('item-photos').createSignedUrl(path,3600); itemRow._url=u.data?u.data.signedUrl:null;
+          renderItems();
+        }
+      }catch(e){ /* photo optional; keep going */ }
+    })();
+
+    var pricingJob = (async function(){
+      try{
+        var b64=await fileToResizedBase64(file);
+        var result=await callPricingAPI(b64);
+        var price=roundEstatePrice(Number(result.suggested_price)||1);
+        var patch={ title:result.title||'Unidentified item', tag_name:(result.tag_name||result.title||'Item').slice(0,28),
+          category:result.category||'', condition_note:result.condition_note||'', price:price, ai_suggested:price,
+          price_low:Number(result.price_low)||price, price_high:Number(result.price_high)||price,
+          reasoning:result.reasoning||'', research_flag:!!result.research_flag };
+        await sb.from('items').update(patch).eq('id',itemRow.id);
+        for(var k in patch) itemRow[k]=patch[k];
+        itemRow._pricing=false; renderItems();
+      }catch(err){ itemRow._pricing=false; itemRow._err=(err&&err.message)||'Pricing failed.'; renderItems(); }
+    })();
+
+    await Promise.all([uploadJob, pricingJob]);
   }
   $('progress').style.display='none'; $('addPhotos').disabled=false; $('fileInput').value='';
 }
 
 /* ============ LABEL PRINTING ============ */
 var LABEL_SIZE = { wmm:62, hmm:29 };  // Brother DK-1209 (your roll)
-var LOGO_BW = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAABqAQAAAAC5IfbHAAAEVElEQVR42q2XsY7bRhCGv10qEgMIJpE0LoxIZapEZZqz5BeJ9QguUhiBfdqzDcRd7g1yeYsUQULDRuAuQuoAoQEDVhOAulyxp1CcFEuKPFEmeRdvIc0S/y5n559/ZqkEN8Yx7UPn/5LAeWf05hy+N61wcSOZLYSptIwCfZJM017QhtZca+SrvDSwI69t755bsx16djW/13FvOxLzQuJF+ylTAolFYk/SUbdT/gjhEL1q9yQlyAYiaSDytMMp5XTjg/cNHHVg3mAnwF2YzLrkyXIGfGnwl13QLw3gnzGw3XKw29AA8gygv4JvO6DPbwOoDdzv4skcgL8gHHdAO9GEM4ZJO/qps4cx+qIVvR3m9lvUcSs6nThbHcN904ZeFXxPDbejthxURYolU8kGH07FStgO0nyy/TShl7b4PSwm3gU8bvE7KbUbSbOSEYnLWbxoVjJXxGhHkgWN6LQSs3TQrGRNers8hPcIjkxTTFbjMWBdaziCSROb8sJp0R0uWYgdNfntVdE2EBl8KOa1DKvT/kWjkvV5eCVtjhuVrJP5lfn9ZiWfSPWUYqeSvp9NvALtEiRt5F7fyd8xfxUDeCtUA5lTt7cqJPZDS9+xiIjEbT3nCjtn8266vPQFth9l17hxXKN+Axe3roM+DTveCiwiGe+XelbeW3K0RWIIRCywkLj4XYhIgiciIKbwZOXBoYvVGbBku+f32RBAaugVEOW9wxRoMWGlo1RG6h6e5VN3m9nkfaom96zyQjnJ97a8J+8ENkDyP7hces0om7vp/I56gPev3gXGSwG8v8NZZJne++5qd/XdbP/m6x5Hs01+Yg3wmLVbta/2PpCoPb8vDhGze5tmUpqgHuyCCygNbFUPQB2IiXbubnvNgUkdurejcNYh3r7pwsw4cehg96R5mX8D5r/eNak2+jXwqJgPO+ytLFPZ5iyBZICS2uUgdGidMEODZ2qFQ0rSgBBNqaNDlXBMCMvKJj1TRK5WCjfuBVG/REuRDqEAKGVg635dxo5Nkb36wI7VEeHzJs/zMRrS4kx+nUtVi2DLnbufR69/M80Pi0oUHSKvokBdlpZDY+gSc5Znv4aYsFhZ+9qdAPOyg+oDxa8Skgi4Q38XHhHT/s1a9oaM7mjdRbyVEGXXind6g+7a9Sva7r6kRSRFXmaM7CJW1hM5ERZm8e7SSiLxIAt0LamOMrCR08ZCiDj702KWM9hYvU+8hE9Ke2KYkYyB35Zgf973e8HnL9YxfHaXY/AZmcAAfGyVVV/Uc+NdBP/k9sAlyB/IqQG5VY9JUmkpSxIwtwAeAjO9J6cTtQbeAjxBrVmbdehamfj+a81UrrIZGbhMHBXGAGM/z9J+Wj/lV1HZCx4yMkHsepKy6pea3/Ks6PeGrSkb4XO4mNzsFlatNxD8VNqYnkE9eA5ZDX3CqyLbn6Bf82bmQrpGfPlE16uTgdOK7bQ8n4Dfo6amdxX79511KSLy639/0JFgj6nunQAAAABJRU5ErkJggg==";
 
 function safeRenderItems(){
   try{ if($('saleView').style.display!=='none') renderItems(); }catch(e){}
@@ -1391,9 +1472,23 @@ async function printLabels(rowsToPrint){
     var price='$'+Number(it.price||0).toFixed(2);
     var num=String(it.item_number||'');
 
-    // logo top-center
+    // Business name top-center (set in menu > Label settings).
     var logoBottom=3;
-    try{ var logoW=22, logoH=6.5; doc.addImage(LOGO_BW,'PNG',(W-logoW)/2,2,logoW,logoH); logoBottom=2+logoH+1.5; }catch(e){ logoBottom=3; }
+    try{
+      var bizName = (ME.labelName || ME.companyName || '').trim();
+      if(bizName){
+        doc.setFont('helvetica','bold');
+        var nameSize = 8;
+        // shrink to fit the label width, leaving room for the number at right
+        var maxNameW = W - 16;
+        doc.setFontSize(nameSize);
+        while(doc.getTextWidth(bizName) > maxNameW && nameSize > 5){
+          nameSize -= 0.5; doc.setFontSize(nameSize);
+        }
+        doc.text(bizName, W/2, 2, { align:'center', baseline:'top' });
+        logoBottom = 2 + (nameSize*0.42) + 2;
+      }
+    }catch(e){ logoBottom=3; }
 
     // six-digit number, small, top-right corner
     doc.setFont('helvetica','bold'); doc.setFontSize(8);
@@ -1464,7 +1559,7 @@ async function exportSale(){
   // pull every item in this sale, with its room name and who took it
   var r=await sb.from('items')
     .select('item_number,title,tag_name,category,condition_note,price,ai_suggested,price_low,price_high,quantity,needs_review,room_id,taken_by, rooms(name)')
-    .eq('sale_id',currentSale.id).order('created_at',{ascending:true});
+    .eq('sale_id',currentSale.id).order('created_at',{ascending:false});
   if(r.error){ alert('Export failed: '+r.error.message); return; }
   if(!r.data.length){ alert('No items to export in this sale yet.'); return; }
 
