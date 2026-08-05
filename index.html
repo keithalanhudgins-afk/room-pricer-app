@@ -1198,10 +1198,19 @@ function renderPrintBar(){
   } else {
     var unsent=priced.filter(function(it){ return !it.printed; });
     var roomName=currentRoom?currentRoom.name:'room';
-    btn.textContent='Print '+roomName+' ('+unsent.length+')';
-    btn.disabled=(unsent.length===0);
-    if(!unsent.length) btn.style.opacity='.45';
-    btn.onclick=function(){ printLabels(unsent); };
+    if(unsent.length){
+      btn.textContent='Print '+roomName+' ('+unsent.length+')';
+      btn.onclick=function(){ printLabels(unsent); };
+    } else {
+      // Everything is marked printed — but sometimes the labels never actually
+      // came out. Let them reprint all, with a heads-up first.
+      btn.textContent='Reprint all '+roomName+' ('+priced.length+')';
+      btn.onclick=function(){
+        if(confirm('All '+priced.length+' item'+(priced.length===1?'':'s')+' in '+roomName+' are already marked as printed. Print them all again anyway?')){
+          printLabels(priced);
+        }
+      };
+    }
     bar.appendChild(btn);
   }
 }
