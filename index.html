@@ -703,8 +703,9 @@ async function showApp(session){
     localStorage.setItem('rpp_setup_done_'+ME.companyId,'1');
   }
 
-  $('salePickerCard').style.display='block';
   renderTrialBanner();
+  if(await restorePlace()) return;
+  $('salePickerCard').style.display='block';
   await loadSales();
 }
 
@@ -805,6 +806,46 @@ sb.auth.onAuthStateChange(function(_e,session){
 });
 sb.auth.getSession().then(function(res){ if(res.data.session){ showApp(res.data.session); } else { showAuth(); } });
 
+/* ============ REMEMBER WHERE YOU WERE ============
+   iOS kills a home-screen web app whenever it needs the memory, and the page
+   reloads from scratch. The sale and room you were in live in variables that
+   die with it, so you land back on the sales list. Writing the two ids down
+   lets startup put you back where you were. */
+function placeKey(){ return 'rpp_place_'+(ME && ME.userId ? ME.userId : 'anon'); }
+function savePlace(){
+  try{
+    if(!currentSale){ localStorage.removeItem(placeKey()); return; }
+    localStorage.setItem(placeKey(), JSON.stringify({
+      saleId: currentSale.id,
+      roomId: currentRoom ? currentRoom.id : null
+    }));
+  }catch(e){}
+}
+function clearPlace(){ try{ localStorage.removeItem(placeKey()); }catch(e){} }
+function readPlace(){
+  try{
+    var raw=localStorage.getItem(placeKey());
+    if(!raw) return null;
+    var p=JSON.parse(raw);
+    return (p && p.saleId) ? p : null;
+  }catch(e){ return null; }
+}
+var pendingRoomId=null;
+// Returns true if it put you back somewhere, false to fall through to the
+// sales list. Anything unexpected falls through quietly rather than erroring.
+async function restorePlace(){
+  var p=readPlace();
+  if(!p) return false;
+  try{
+    var r=await sb.from('sales').select('id,name,created_at,archived').eq('id',p.saleId).maybeSingle();
+    if(r.error || !r.data || r.data.archived){ clearPlace(); return false; }
+    pendingRoomId=p.roomId||null;
+    hideAllScreens();
+    await openSale(r.data);
+    return true;
+  }catch(e){ clearPlace(); return false; }
+}
+
 /* ============ PEOPLE (owner only) ============ */
 function hideAllScreens(){
   var sa=$('scrollArrows'); if(sa) sa.style.display='none';
@@ -819,7 +860,7 @@ function hideAllScreens(){
   var te=$('trialEndedCard'); if(te) te.style.display='none';
   var tc=$('trialEndedCrewCard'); if(tc) tc.style.display='none';
 }
-function goToSales(){ showArchived=false; hideAllScreens(); $('salePickerCard').style.display='block'; loadSales(); }
+function goToSales(){ showArchived=false; clearPlace(); currentSale=null; currentRoom=null; hideAllScreens(); $('salePickerCard').style.display='block'; loadSales(); }
 function openPeople(){ hideAllScreens(); $('peopleCard').style.display='block'; loadPeople(); }
 $('closePeopleBtn').onclick=function(){ goToSales(); };
 
@@ -1105,6 +1146,7 @@ async function renameSale(s){
 }
 async function archiveSale(s, doArchive){
   await sb.from('sales').update({archived:doArchive}).eq('id',s.id);
+  if(doArchive){ var p=readPlace(); if(p && p.saleId===s.id) clearPlace(); }
   loadSales();
 }
 async function deleteSale(s){
@@ -1118,6 +1160,7 @@ async function deleteSale(s){
   }catch(e){}
   var d=await sb.from('sales').delete().eq('id',s.id);
   if(d.error){ alert('Delete failed: '+d.error.message); return; }
+  var p=readPlace(); if(p && p.saleId===s.id) clearPlace();
   loadSales();
 }
 $('createSaleBtn').onclick=async function(){
@@ -1136,10 +1179,12 @@ async function openSale(sale){
   $('salePickerCard').style.display='none'; $('saleView').style.display='block';
   $('saleNameHead').textContent=sale.name;
   $('addPhotosCard').style.display='none'; $('itemsWrap').innerHTML='';
+  savePlace();
   await loadRooms();
 }
 $('backToSales').onclick=function(){
   selectedIds={};
+  clearPlace();
   currentSale=null; currentRoom=null; rooms=[]; items=[];
   $('saleView').style.display='none'; $('salePickerCard').style.display='block';
   loadSales();
@@ -1149,8 +1194,15 @@ async function loadRooms(){
   var r=await sb.from('rooms').select('id,name,created_at').eq('sale_id',currentSale.id).order('created_at',{ascending:true});
   rooms = r.error ? [] : r.data;
   renderRoomChips();
-  // auto-select first room if any
-  if(rooms.length && !currentRoom){ selectRoom(rooms[0]); }
+  // auto-select: the room you were last in if we can find it, else the first
+  if(rooms.length && !currentRoom){
+    var want=null;
+    if(pendingRoomId){
+      for(var i=0;i<rooms.length;i++){ if(rooms[i].id===pendingRoomId){ want=rooms[i]; break; } }
+    }
+    pendingRoomId=null;
+    selectRoom(want||rooms[0]);
+  }
   else if(!rooms.length){ $('addPhotosCard').style.display='none'; $('itemsWrap').innerHTML='<p class="hint" style="text-align:center">Add a room above to start pricing.</p>'; }
 }
 var editRoomsMode=false;
@@ -1224,6 +1276,7 @@ async function deleteRoom(rm){
   if(d.error){ alert('Delete failed: '+d.error.message); return; }
   var wasCurrent = currentRoom && currentRoom.id===rm.id;
   rooms=rooms.filter(function(x){ return x.id!==rm.id; });
+  var pl=readPlace(); if(pl && pl.roomId===rm.id){ currentRoom=null; savePlace(); }
   if(wasCurrent){
     currentRoom=null; items=[];
     $('itemsWrap').innerHTML=''; $('roomTools').style.display='none'; $('printBar').style.display='none';
