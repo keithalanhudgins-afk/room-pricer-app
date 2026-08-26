@@ -1259,16 +1259,51 @@ async function loadItems(){
   $('itemsWrap').innerHTML='<p class="hint">Loading items…</p>';
   var r=await sb.from('items').select('*').eq('room_id',currentRoom.id).order('created_at',{ascending:true});
   items = r.error ? [] : r.data;
-  // fetch signed thumbnail URLs for photos
-  await attachPhotoUrls();
+  var loadedRoomId = currentRoom ? currentRoom.id : null;
+  // Draw the room NOW. Thumbnails used to be fetched one at a time before
+  // anything appeared, which meant a 60-item room made you wait through 60
+  // round trips before you could touch a single price.
   renderItems();
+  attachPhotoUrls(loadedRoomId);
 }
-async function attachPhotoUrls(){
-  for(var i=0;i<items.length;i++){
-    if(items[i].photo_path){
-      try{ var u=await sb.storage.from('item-photos').createSignedUrl(items[i].photo_path,3600); items[i]._url = u.data ? u.data.signedUrl : null; }catch(e){ items[i]._url=null; }
+async function attachPhotoUrls(roomId){
+  var need=items.filter(function(it){ return it.photo_path && !it._url; });
+  if(!need.length) return;
+  // one request per batch instead of one request per photo
+  for(var start=0; start<need.length; start+=50){
+    var batch=need.slice(start, start+50);
+    var paths=batch.map(function(it){ return it.photo_path; });
+    var urls=null;
+    try{
+      var res=await sb.storage.from('item-photos').createSignedUrls(paths, 3600);
+      urls = res && res.data ? res.data : null;
+    }catch(e){ urls=null; }
+    if(urls){
+      for(var i=0;i<batch.length;i++){
+        var row=urls[i];
+        batch[i]._url = (row && !row.error && row.signedUrl) ? row.signedUrl : null;
+      }
+    } else {
+      // older client or a batch failure: fall back to one at a time
+      for(var j=0;j<batch.length;j++){
+        try{ var u=await sb.storage.from('item-photos').createSignedUrl(batch[j].photo_path,3600); batch[j]._url = u.data ? u.data.signedUrl : null; }catch(e2){ batch[j]._url=null; }
+      }
     }
+    // bail out if you already walked to another room
+    if(roomId && (!currentRoom || currentRoom.id!==roomId)) return;
+    batch.forEach(paintThumb);
   }
+}
+// Swap a placeholder for the real picture in place. A full re-render here
+// would yank the keyboard out from under you mid-edit.
+function paintThumb(it){
+  if(!it._url) return;
+  var card=document.querySelector('#itemsWrap .item[data-item-id="'+it.id+'"]');
+  if(!card) return;
+  var ph=card.querySelector('.thumb.ph');
+  if(!ph) return;
+  var im=document.createElement('img'); im.className='thumb'; im.src=it._url; im.loading='lazy';
+  ph.parentNode.replaceChild(im, ph);
 }
 function renderPrintBar(){
   var bar=$('printBar');
@@ -1370,6 +1405,7 @@ function renderItems(){
   }
   shown.forEach(function(it){
     var card=document.createElement('div'); card.className='item'+(it.needs_review?' review':'')+(selectedIds[it.id]?' selected':'');
+    card.setAttribute('data-item-id', it.id);
     if(it.needs_review){ var rb=document.createElement('div'); rb.className='reviewbanner'; rb.textContent='⚠ Flagged for review — not printing. Retake or unflag when fixed.'; card.appendChild(rb); }
     if(!it._pricing && !it._err){
       var selBox=document.createElement('button'); selBox.className='selbox'+(selectedIds[it.id]?' on':'');
