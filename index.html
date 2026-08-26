@@ -1298,7 +1298,7 @@ $('addRoomBtn').onclick=async function(){
 };
 async function selectRoom(rm){
   selectedIds={};
-  currentRoom=rm; renderRoomChips();
+  currentRoom=rm; renderRoomChips(); savePlace();
   $('addPhotosCard').style.display='block';
   roomQuery=''; showUncheckedOnly=false;
   var rs=$('roomSearch'); if(rs) rs.value='';
