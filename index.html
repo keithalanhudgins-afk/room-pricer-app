@@ -414,11 +414,12 @@
       <div id="printBar" style="display:none"></div>
       <div id="roomTools" style="display:none;margin-bottom:10px">
         <input class="txt" id="roomSearch" placeholder="Search this room…">
-        <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
-          <label class="toggle-line" id="showUncheckedToggle" style="margin:0;flex:1">
+        <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+          <label class="toggle-line" id="showUncheckedToggle" style="margin:0;flex:1 1 150px">
             <span class="switch" id="showUncheckedSwitch"><span class="knob"></span></span>
             Show only unchecked
           </label>
+          <button class="btn-soft" id="roomReverse" title="Reverse the order" style="border:1px solid var(--manilaEdge);border-radius:2px;padding:10px 14px;font-size:14px;font-weight:600;line-height:1;white-space:nowrap">&#8645; Oldest first</button>
           <button class="btn-soft" id="roomRefresh" title="Refresh this room" style="border:1px solid var(--manilaEdge);border-radius:2px;padding:10px 14px;font-size:17px;line-height:1">&#8635;</button>
         </div>
       </div>
@@ -1164,7 +1165,7 @@ async function selectRoom(rm){
 /* ============ ITEMS ============ */
 async function loadItems(){
   $('itemsWrap').innerHTML='<p class="hint">Loading items…</p>';
-  var r=await sb.from('items').select('*').eq('room_id',currentRoom.id).order('created_at',{ascending:false});
+  var r=await sb.from('items').select('*').eq('room_id',currentRoom.id).order('created_at',{ascending:true});
   items = r.error ? [] : r.data;
   // fetch signed thumbnail URLs for photos
   await attachPhotoUrls();
@@ -1180,7 +1181,7 @@ async function attachPhotoUrls(){
 function renderPrintBar(){
   var bar=$('printBar');
   bar.innerHTML='';
-  var priced=items.filter(function(it){ return it.title && !it.needs_review; });
+  var priced=orderedItems().filter(function(it){ return it.title && !it.needs_review; });
   if(!priced.length){ bar.style.display='none'; return; }
   bar.style.display='block';
 
@@ -1222,18 +1223,28 @@ function toggleSelect(it){ if(selectedIds[it.id]) delete selectedIds[it.id]; els
 function selectedCount(){ return Object.keys(selectedIds).length; }
 function clearSelection(){ selectedIds={}; renderItems(); }
 function printSelected(){
-  var chosen=items.filter(function(it){ return selectedIds[it.id]; });
+  var chosen=orderedItems().filter(function(it){ return selectedIds[it.id]; });
   if(!chosen.length) return;
   printLabels(chosen);
   clearSelection();
 }
 
-var roomQuery=''; var showUncheckedOnly=false;
+var roomQuery=''; var showUncheckedOnly=false; var reverseOrder=false;
+// Items load oldest-first. orderedItems() is the single place that decides
+// which way the room reads, so the screen and the print bar never disagree.
+function orderedItems(){ return reverseOrder ? items.slice().reverse() : items; }
+function updateReverseLabel(){
+  var b=$('roomReverse');
+  if(b) b.innerHTML=(reverseOrder?'&#8645; Newest first':'&#8645; Oldest first');
+}
 function wireRoomTools(){
   var s=$('roomSearch');
   if(s && !s._wired){ s._wired=true; s.oninput=function(e){ roomQuery=e.target.value.trim(); renderItems(); }; }
   var rf=$('roomRefresh');
   if(rf && !rf._wired){ rf._wired=true; rf.onclick=function(){ if(currentRoom) loadItems(); }; }
+  var rv=$('roomReverse');
+  if(rv && !rv._wired){ rv._wired=true; rv.onclick=function(){ reverseOrder=!reverseOrder; renderItems(); }; }
+  updateReverseLabel();
   var t=$('showUncheckedToggle');
   if(t && !t._wired){ t._wired=true; t.onclick=function(){
     showUncheckedOnly=!showUncheckedOnly;
@@ -1242,7 +1253,7 @@ function wireRoomTools(){
   }; }
 }
 function visibleItems(){
-  var list=items;
+  var list=orderedItems();
   if(roomQuery){
     var q=roomQuery.toLowerCase();
     list=list.filter(function(it){
@@ -1419,7 +1430,7 @@ async function handleFiles(fileList){
       taken_by:ME.userId, item_number:num, quantity:1, price:0
     }).select().single();
     if(ins.error){ $('progress').textContent='Save error: '+ins.error.message; $('addPhotos').disabled=false; return; }
-    var itemRow=ins.data; itemRow._pricing=true; items.unshift(itemRow); renderItems();
+    var itemRow=ins.data; itemRow._pricing=true; items.push(itemRow); renderItems();
 
     // Upload the full photo AND ask the AI to price it at the same time —
     // these don't depend on each other, so running them in parallel instead
