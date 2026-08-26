@@ -1317,7 +1317,8 @@ function renderItems(){
       var tagWrap=document.createElement('div'); tagWrap.className='tagwrap';
       var tagLab=document.createElement('label'); tagLab.textContent='Label text (what prints on the tag)'; tagWrap.appendChild(tagLab);
       var tagIn=document.createElement('input'); tagIn.type='text'; tagIn.maxLength=28; tagIn.value=(it.tag_name||it.title||'').slice(0,28);
-      tagIn.oninput=function(e){ it.tag_name=e.target.value; sb.from('items').update({tag_name:e.target.value}).eq('id',it.id); };
+      tagIn.oninput=function(e){ it.tag_name=e.target.value; queueTagSave(it,e.target.value); };
+      tagIn.onblur=function(e){ flushTagSave(it,e.target.value); };
       tagWrap.appendChild(tagIn); f.appendChild(tagWrap);
       var wt=document.createElement('div'); wt.className='who2'; wt.textContent='Photo by '+(it.taken_by===ME.userId?'you':'a teammate'); f.appendChild(wt);
     }
@@ -1327,7 +1328,11 @@ function renderItems(){
       var pc=document.createElement('div'); pc.className='pcontrol';
       var minus=document.createElement('button'); minus.className='pbtn pminus'; minus.textContent='−'; minus.onclick=function(){ changePrice(it,-1); };
       var dollar=document.createElement('span'); dollar.className='dollar'; dollar.textContent='$';
-      var pin=document.createElement('input'); pin.className='pinput'; pin.type='number'; pin.min='0'; pin.setAttribute('inputmode','numeric'); pin.value=(it.price==null?'':it.price);
+      var pin=document.createElement('input'); pin.className='pinput'; pin.type='text'; pin.setAttribute('inputmode','decimal'); pin.value=(it.price==null?'':it.price);
+      // Tap the box and the whole number highlights, so typing replaces it.
+      // A number input will not let us do this, which is why it is a text input.
+      pin.onfocus=function(e){ var el=e.target; setTimeout(function(){ try{ el.select(); el.setSelectionRange(0,el.value.length); }catch(err){} },0); };
+      pin.oninput=function(e){ var c=e.target.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1'); if(c!==e.target.value) e.target.value=c; };
       pin.onchange=function(e){ setPriceTyped(it,Number(e.target.value),e.target); };
       pin.onblur=function(e){ setPriceTyped(it,Number(e.target.value),e.target); };
       var plus=document.createElement('button'); plus.className='pbtn pplus'; plus.textContent='+'; plus.onclick=function(){ changePrice(it,1); };
@@ -1373,6 +1378,29 @@ async function setPriceTyped(it,val,inputEl){
   if(r && r.error){ alert('Price did not save: '+r.error.message); }
 }
 function updatePrintBarOnly(){ try{ renderPrintBar(); }catch(e){} }
+
+/* Label text save.
+   The old code fired one save per keystroke and never checked the result, so
+   requests raced each other and a half-typed value could win. Now we wait
+   until typing stops, send one save, read the row back, and say something out
+   loud if it did not take. */
+var tagTimers={};
+function queueTagSave(it,val){
+  if(tagTimers[it.id]) clearTimeout(tagTimers[it.id]);
+  tagTimers[it.id]=setTimeout(function(){ saveTagName(it,val); }, 600);
+}
+function flushTagSave(it,val){
+  if(tagTimers[it.id]){ clearTimeout(tagTimers[it.id]); delete tagTimers[it.id]; }
+  saveTagName(it,val);
+}
+async function saveTagName(it,val){
+  delete tagTimers[it.id];
+  val=(val||'').slice(0,28);
+  var r=await sb.from('items').update({tag_name:val}).eq('id',it.id).select('id,tag_name');
+  if(r.error){ alert('Label text did not save: '+r.error.message); return; }
+  if(!r.data || !r.data.length){ alert('Label text did not save. The database accepted the request but changed nothing on item '+(it.item_number||'?')+'. Screenshot this and send it to Claude.'); return; }
+  it.tag_name=r.data[0].tag_name;
+}
 function changeQty(it,d){ var q=Math.max(1,(Number(it.quantity)||1)+d); it.quantity=q; renderItems(); sb.from('items').update({quantity:q}).eq('id',it.id); }
 async function toggleReview(it){
   var now=!it.needs_review; it.needs_review=now; renderItems();
