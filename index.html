@@ -395,6 +395,7 @@
       <div class="card">
         <div class="step">Rooms</div>
         <div id="roomChips"></div>
+        <div style="margin-top:2px"><button class="btn-soft" id="editRoomsBtn" style="background:none;border:none;color:var(--blue);font-size:14px;font-weight:600;text-decoration:underline;padding:4px 0">Edit rooms</button></div>
         <div class="row" style="margin-top:8px">
           <input class="txt" id="newRoomName" placeholder="Add a room (e.g. Kitchen)" style="flex:1 1 160px">
           <button class="btn btn-ghost" id="addRoomBtn">Add room</button>
@@ -1068,6 +1069,8 @@ async function loadSales(){
       var open=document.createElement('button'); open.className='btn'; open.textContent='Open →'; open.onclick=function(){ openSale(s); };
       row.appendChild(open);
       if(ME.isOwner){
+        var ren=document.createElement('button'); ren.className='btn-soft'; ren.style.cssText='border:1px solid var(--manilaEdge);border-radius:2px;padding:10px 12px;font-weight:600;font-size:14px'; ren.textContent='Rename';
+        ren.onclick=function(){ renameSale(s); }; row.appendChild(ren);
         var arch=document.createElement('button'); arch.className='btn-soft'; arch.style.cssText='border:1px solid var(--manilaEdge);border-radius:2px;padding:10px 12px;font-weight:600;font-size:14px'; arch.textContent='Archive';
         arch.onclick=function(){ archiveSale(s,true); }; row.appendChild(arch);
         var del=document.createElement('button'); del.className='btn-soft'; del.style.cssText='border:1px solid var(--orange);color:var(--rust);border-radius:2px;padding:10px 12px;font-weight:600;font-size:14px'; del.textContent='Delete';
@@ -1082,6 +1085,23 @@ async function loadSales(){
     }
     $('salesList').appendChild(row);
   });
+}
+async function renameSale(s){
+  var name=prompt('Rename this sale:', s.name);
+  if(name===null) return;
+  name=name.trim();
+  if(!name){ alert('A sale needs a name.'); return; }
+  if(name===s.name) return;
+  var r=await sb.from('sales').update({name:name}).eq('id',s.id).select('id,name');
+  if(r.error){ alert('Rename failed: '+r.error.message); return; }
+  if(!r.data || !r.data.length){ alert('Rename did not save. The database changed nothing.'); return; }
+  s.name=r.data[0].name;
+  if(currentSale && currentSale.id===s.id){
+    currentSale.name=s.name;
+    $('saleNameHead').textContent=s.name;
+    var ar=$('allRoomsSaleName'); if(ar) ar.textContent=s.name;
+  }
+  loadSales();
 }
 async function archiveSale(s, doArchive){
   await sb.from('sales').update({archived:doArchive}).eq('id',s.id);
@@ -1133,14 +1153,86 @@ async function loadRooms(){
   if(rooms.length && !currentRoom){ selectRoom(rooms[0]); }
   else if(!rooms.length){ $('addPhotosCard').style.display='none'; $('itemsWrap').innerHTML='<p class="hint" style="text-align:center">Add a room above to start pricing.</p>'; }
 }
+var editRoomsMode=false;
 function renderRoomChips(){
   var wrap=$('roomChips'); wrap.innerHTML='';
-  if(!rooms.length){ wrap.innerHTML='<span class="hint">No rooms yet.</span>'; return; }
+  var eb=$('editRoomsBtn');
+  if(eb){
+    eb.style.display = rooms.length ? 'inline-block' : 'none';
+    eb.textContent = editRoomsMode ? 'Done editing' : 'Edit rooms';
+    if(!eb._wired){ eb._wired=true; eb.onclick=function(){ editRoomsMode=!editRoomsMode; renderRoomChips(); }; }
+  }
+  if(!rooms.length){ wrap.innerHTML='<span class="hint">No rooms yet.</span>'; editRoomsMode=false; return; }
   rooms.forEach(function(rm){
     var chip=document.createElement('span'); chip.className='roomchip'+(currentRoom&&currentRoom.id===rm.id?' active':'');
-    chip.textContent=rm.name; chip.onclick=function(){ selectRoom(rm); };
+    if(editRoomsMode){
+      // Edit mode: the chip stops selecting and shows its own controls, so a
+      // mis-tap can't nuke a room while you're just moving between them.
+      var nameSpan=document.createElement('span'); nameSpan.textContent=rm.name; chip.appendChild(nameSpan);
+      var pen=document.createElement('button');
+      pen.style.cssText='background:none;border:none;padding:0 0 0 10px;font-size:15px;color:inherit;line-height:1';
+      pen.title='Rename '+rm.name; pen.setAttribute('aria-label','Rename '+rm.name); pen.textContent='\u270E';
+      pen.onclick=function(ev){ ev.stopPropagation(); renameRoom(rm); };
+      chip.appendChild(pen);
+      var x=document.createElement('button');
+      x.style.cssText='background:none;border:none;padding:0 0 0 8px;font-size:15px;font-weight:700;color:var(--rust);line-height:1';
+      x.title='Delete '+rm.name; x.setAttribute('aria-label','Delete '+rm.name); x.textContent='\u2715';
+      x.onclick=function(ev){ ev.stopPropagation(); deleteRoom(rm); };
+      chip.appendChild(x);
+    } else {
+      chip.textContent=rm.name; chip.onclick=function(){ selectRoom(rm); };
+    }
     wrap.appendChild(chip);
   });
+}
+async function renameRoom(rm){
+  var name=prompt('Rename this room:', rm.name);
+  if(name===null) return;
+  name=name.trim();
+  if(!name){ alert('A room needs a name.'); return; }
+  if(name===rm.name) return;
+  var r=await sb.from('rooms').update({name:name}).eq('id',rm.id).select('id,name');
+  if(r.error){ alert('Rename failed: '+r.error.message); return; }
+  if(!r.data || !r.data.length){ alert('Rename did not save. The database changed nothing.'); return; }
+  rm.name=r.data[0].name;
+  if(currentRoom && currentRoom.id===rm.id){
+    currentRoom.name=rm.name;
+    $('currentRoomLabel').textContent='Price this room: '+rm.name;
+  }
+  renderRoomChips();
+  renderPrintBar();
+}
+async function deleteRoom(rm){
+  var c=await sb.from('items').select('id',{count:'exact',head:true}).eq('room_id',rm.id);
+  if(c.error){ alert('Could not check the room: '+c.error.message); return; }
+  var n=c.count||0;
+  if(n>0){
+    if(!confirm(rm.name+' has '+n+' item'+(n===1?'':'s')+' in it.\n\nDeleting the room erases those items, their prices, and their photos. This cannot be undone.')) return;
+    if(!confirm('Really delete '+rm.name+' and all '+n+' item'+(n===1?'':'s')+'? Last chance.')) return;
+  } else {
+    if(!confirm('Delete the room '+rm.name+'? It is empty.')) return;
+  }
+  // clear this room's photos out of storage first; the DB cascade handles the rows
+  try{
+    var its=await sb.from('items').select('photo_path').eq('room_id',rm.id);
+    if(its.data){
+      var paths=its.data.filter(function(x){return x.photo_path;}).map(function(x){return x.photo_path;});
+      if(paths.length) await sb.storage.from('item-photos').remove(paths);
+    }
+  }catch(e){}
+  var d=await sb.from('rooms').delete().eq('id',rm.id);
+  if(d.error){ alert('Delete failed: '+d.error.message); return; }
+  var wasCurrent = currentRoom && currentRoom.id===rm.id;
+  rooms=rooms.filter(function(x){ return x.id!==rm.id; });
+  if(wasCurrent){
+    currentRoom=null; items=[];
+    $('itemsWrap').innerHTML=''; $('roomTools').style.display='none'; $('printBar').style.display='none';
+    $('addPhotosCard').style.display='none';
+  }
+  if(!rooms.length){ editRoomsMode=false; }
+  renderRoomChips();
+  if(wasCurrent && rooms.length) selectRoom(rooms[0]);
+  else if(!rooms.length) $('itemsWrap').innerHTML='<p class="hint" style="text-align:center">Add a room above to start pricing.</p>';
 }
 $('addRoomBtn').onclick=async function(){
   var name=$('newRoomName').value.trim();
